@@ -10,5 +10,14 @@ CREATE TABLE public.unregistered_owners (
 
 ALTER TABLE public.unregistered_owners ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can CRUD own unregistered owners" ON public.unregistered_owners
-  FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own unregistered owners" ON public.unregistered_owners
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own unregistered owners" ON public.unregistered_owners
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own unregistered owners" ON public.unregistered_owners
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own unregistered owners" ON public.unregistered_owners
+  FOR DELETE USING (auth.uid() = user_id);

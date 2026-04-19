@@ -2,9 +2,10 @@ import { Hono } from 'hono'
 import Groq from 'groq-sdk'
 
 const app = new Hono()
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY_1! })
 
 app.post('/analyze', async (c) => {
+  const groq = new Groq({ apiKey: c.env.GROQ_API_KEY_1 })
+  
   const { utterances, speaker_map, meeting_context } = await c.req.json()
   const namedLines = utterances.map((utt: any) => `${speaker_map[utt.speaker] || `Speaker ${utt.speaker}`}: ${utt.text}`)
   const namedTranscript = namedLines.join('\n')
@@ -23,6 +24,8 @@ app.post('/analyze', async (c) => {
 })
 
 app.post('/draft-email', async (c) => {
+  const groq = new Groq({ apiKey: c.env.GROQ_API_KEY_1 })
+  
   const data = await c.req.json()
   if (!data.summary || data.summary === 'No summary available.') return c.json({ error: 'No meeting data to draft email from.' })
   const toneInstructions: Record<string, string> = { ceo: 'Write for C-suite: bullet points, outcomes only, under 200 words.', client: 'Write for client: warm, relationship-first, commitments not tasks, under 300 words.', team: 'Write for team: casual, direct, action-focused, under 250 words.' }
@@ -35,6 +38,8 @@ app.post('/draft-email', async (c) => {
 })
 
 app.post('/coach', async (c) => {
+  const groq = new Groq({ apiKey: c.env.GROQ_API_KEY_1 })
+  
   const data = await c.req.json()
   const prompt = `You are a meeting coach. Provide actionable advice.\nMeeting type: ${data.meeting_type}\nScore: ${data.effectiveness_score}/10\nReason: ${data.effectiveness_reason}\nSentiment: ${data.sentiment}\nAction items: ${data.action_items?.length || 0}\nOpen questions: ${data.open_questions?.length || 0}\nRisks: ${data.risk_flags?.length || 0}\n\nReturn ONLY JSON: {"headline": "...", "top_strength": "...", "top_improvement": "...", "agenda_suggestion": [...], "facilitation_tips": [...], "score_to_beat": "..."}`
   const response = await groq.chat.completions.create({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' }, max_tokens: 800 })

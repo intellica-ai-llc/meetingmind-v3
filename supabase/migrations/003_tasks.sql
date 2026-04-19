@@ -19,8 +19,17 @@ CREATE TABLE public.tasks (
 
 ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can CRUD own tasks" ON public.tasks
-  FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own tasks" ON public.tasks
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own tasks" ON public.tasks
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own tasks" ON public.tasks
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own tasks" ON public.tasks
+  FOR DELETE USING (auth.uid() = user_id);
 
 CREATE INDEX idx_tasks_user_id ON public.tasks(user_id);
 CREATE INDEX idx_tasks_status ON public.tasks(status);

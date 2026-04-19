@@ -26,8 +26,17 @@ CREATE TABLE public.meetings (
 
 ALTER TABLE public.meetings ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can CRUD own meetings" ON public.meetings
-  FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own meetings" ON public.meetings
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own meetings" ON public.meetings
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own meetings" ON public.meetings
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own meetings" ON public.meetings
+  FOR DELETE USING (auth.uid() = user_id);
 
 CREATE INDEX idx_meetings_user_id ON public.meetings(user_id);
 CREATE INDEX idx_meetings_created_at ON public.meetings(created_at DESC);

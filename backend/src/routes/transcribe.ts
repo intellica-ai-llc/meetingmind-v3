@@ -4,9 +4,10 @@ import { writeFile, unlink } from 'fs/promises'
 import { randomUUID } from 'crypto'
 
 const app = new Hono()
-const client = new AssemblyAI({ apiKey: process.env.ASSEMBLYAI_API_KEY! })
 
 app.post('/transcribe', async (c) => {
+  const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
+  
   const formData = await c.req.formData()
   const audioFile = formData.get('audio') as File
   if (!audioFile) return c.json({ error: 'No audio file provided' }, 400)
@@ -24,6 +25,8 @@ app.post('/transcribe', async (c) => {
 })
 
 app.get('/status/:jobId', async (c) => {
+  const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
+  
   const jobId = c.req.param('jobId')
   const transcript = await client.transcripts.get(jobId)
   if (transcript.status === 'error') return c.json({ status: 'error', message: transcript.error })

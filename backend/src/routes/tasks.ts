@@ -2,9 +2,9 @@ import { Hono } from 'hono'
 import { createClient } from '@supabase/supabase-js'
 
 const app = new Hono()
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 app.get('/', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const { status } = c.req.query()
   let query = supabase.from('tasks').select('*, meetings(title)').eq('user_id', user.id).order('due_date', { ascending: true, nullsFirst: false })
@@ -15,6 +15,7 @@ app.get('/', async (c) => {
 })
 
 app.post('/', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const { title, description, owner_name, due_date, priority, meeting_id } = await c.req.json()
   if (!title) return c.json({ error: 'Title is required' }, 400)
@@ -24,6 +25,7 @@ app.post('/', async (c) => {
 })
 
 app.put('/:id/complete', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const id = c.req.param('id')
   const { completion_notes } = await c.req.json()
@@ -33,6 +35,7 @@ app.put('/:id/complete', async (c) => {
 })
 
 app.post('/bulk/remind', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const { task_ids } = await c.req.json()
   const { data, error } = await supabase.from('tasks').select('*').in('id', task_ids).eq('user_id', user.id)

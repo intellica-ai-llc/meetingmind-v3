@@ -2,9 +2,9 @@ import { Hono } from 'hono'
 import { createClient } from '@supabase/supabase-js'
 
 const app = new Hono()
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 app.get('/', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const { data, error } = await supabase.from('user_patterns').select('*').eq('user_id', user.id)
   if (error) return c.json({ error: error.message }, 500)
@@ -12,6 +12,7 @@ app.get('/', async (c) => {
 })
 
 app.post('/refresh', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const { data: meetings } = await supabase.from('meetings').select('effectiveness_score, created_at').eq('user_id', user.id).order('created_at', { ascending: true })
   if (meetings && meetings.length >= 5) {

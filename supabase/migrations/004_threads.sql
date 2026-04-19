@@ -16,8 +16,17 @@ CREATE TABLE public.unresolved_threads (
 
 ALTER TABLE public.unresolved_threads ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can CRUD own threads" ON public.unresolved_threads
-  FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can view own threads" ON public.unresolved_threads
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own threads" ON public.unresolved_threads
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own threads" ON public.unresolved_threads
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own threads" ON public.unresolved_threads
+  FOR DELETE USING (auth.uid() = user_id);
 
 CREATE INDEX idx_threads_user_id ON public.unresolved_threads(user_id);
 CREATE INDEX idx_threads_status ON public.unresolved_threads(status);

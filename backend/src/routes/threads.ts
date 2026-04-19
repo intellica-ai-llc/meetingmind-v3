@@ -2,9 +2,9 @@ import { Hono } from 'hono'
 import { createClient } from '@supabase/supabase-js'
 
 const app = new Hono()
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 app.get('/', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const { data, error } = await supabase.from('unresolved_threads').select('*').eq('user_id', user.id).eq('status', 'open').order('severity', { ascending: false }).order('mention_count', { ascending: false })
   if (error) return c.json({ error: error.message }, 500)
@@ -12,6 +12,7 @@ app.get('/', async (c) => {
 })
 
 app.post('/:id/resolve', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const id = c.req.param('id')
   const { resolution_notes } = await c.req.json()

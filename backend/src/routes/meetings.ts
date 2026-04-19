@@ -2,9 +2,9 @@ import { Hono } from 'hono'
 import { createClient } from '@supabase/supabase-js'
 
 const app = new Hono()
-const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 app.get('/', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const { limit = 20, offset = 0 } = c.req.query()
   const { data, error } = await supabase.from('meetings').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1)
@@ -13,6 +13,7 @@ app.get('/', async (c) => {
 })
 
 app.get('/search', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const q = c.req.query('q')
   if (!q) return c.json({ meetings: [] })
@@ -22,6 +23,7 @@ app.get('/search', async (c) => {
 })
 
 app.get('/:id', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const id = c.req.param('id')
   const { data, error } = await supabase.from('meetings').select('*').eq('id', id).eq('user_id', user.id).single()
@@ -30,6 +32,7 @@ app.get('/:id', async (c) => {
 })
 
 app.delete('/:id', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const id = c.req.param('id')
   const { error } = await supabase.from('meetings').delete().eq('id', id).eq('user_id', user.id)

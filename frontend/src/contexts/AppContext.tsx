@@ -25,6 +25,8 @@ interface AppContextType {
   countdown: number | null; setCountdown: (countdown: number | null) => void
   copied: boolean; setCopied: (copied: boolean) => void
   regenLoading: boolean; setRegenLoading: (loading: boolean) => void
+  fileError: string; setFileError: (error: string) => void
+  demoMode: boolean; setDemoMode: (mode: boolean) => void
   reset: () => void
   handleStartMeeting: () => void
   handleStopRecording: () => void
@@ -63,6 +65,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [countdown, setCountdown] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
   const [regenLoading, setRegenLoading] = useState(false)
+  const [fileError, setFileError] = useState('')
+  const [demoMode, setDemoMode] = useState(false)
 
   const reset = () => {
     setStep('upload')
@@ -83,6 +87,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCountdown(null)
     setMeetingTitle('')
     setMeetingDate(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))
+    setFileError('')
+    setDemoMode(false)
   }
 
   const handleStartMeeting = () => {}
@@ -104,6 +110,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       meetingTitle, setMeetingTitle, meetingDate, setMeetingDate, transcriptOpen, setTranscriptOpen,
       namedTranscript, setNamedTranscript, coachData, setCoachData, isRecording, setIsRecording,
       recordingSecs, setRecordingSecs, countdown, setCountdown, copied, setCopied, regenLoading, setRegenLoading,
+      fileError, setFileError, demoMode, setDemoMode,
       reset, handleStartMeeting, handleStopRecording, handleFileChange, handleUpload, handleNameConfirm,
       handleDemoMode, copyEmail, downloadMinutes, shareViaEmail, regenerateEmail
     }}>
