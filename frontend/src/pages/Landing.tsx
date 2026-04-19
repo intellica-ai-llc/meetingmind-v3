@@ -25,7 +25,7 @@ export function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-meetingmind-bg">
+    <div className="min-h-screen bg-[var(--color-background-primary)]">
       {/* ANNOUNCEMENT BAR */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-[#1A0F00] py-2 px-5">
         <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -45,7 +45,7 @@ export function Landing() {
       </div>
 
       {/* NAVIGATION */}
-      <nav className="pt-14 pb-3 px-6 border-b border-[var(--mm-border)] bg-[var(--color-background-primary)]">
+      <nav className="pt-14 pb-3 px-6 border-b border-[var(--color-border-tertiary)] bg-[var(--color-background-primary)]">
         <div className="flex items-center justify-between">
           <div className="text-base font-medium">
             Meeting<span className="text-[#E8A020]">Mind</span>
@@ -84,6 +84,7 @@ export function Landing() {
         <div className="grid md:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* LEFT COLUMN */}
           <div>
+            {/* Social Proof Avatar Stack */}
             <div className="flex items-center gap-2 mb-4">
               <div className="flex items-center">
                 <div className="w-[22px] h-[22px] rounded-full bg-[#1E3A5F] border-2 border-[var(--color-background-primary)] flex items-center justify-center text-[9px] font-medium text-[#93C5FD] z-0">
@@ -104,6 +105,7 @@ export function Landing() {
               </span>
             </div>
 
+            {/* H1 - Three lines with <br> tags */}
             <h1 className="text-[30px] font-medium leading-tight tracking-[-0.5px] mb-3">
               Stop losing decisions<br />
               and action items<br />
@@ -114,6 +116,7 @@ export function Landing() {
               Upload any recording or go live — MeetingMind extracts decisions, tasks, risks, and coaching in minutes. No bot. No installation. No missed follow-ups.
             </p>
 
+            {/* CTA BLOCK */}
             <div className="flex flex-col gap-2.5">
               <button
                 onClick={handlePurchase}
@@ -121,7 +124,9 @@ export function Landing() {
               >
                 <div className="flex flex-col items-start gap-0.5">
                   <span className="text-sm font-medium text-[#1A0F00]">Get Pro — instant access</span>
-                  <span className="text-[11px] text-[#1A0F00] opacity-70">100 meetings/mo · Coach · Slack · Exports</span>
+                  <span className="text-[11px] text-[#1A0F00] opacity-70">
+                    100 meetings/mo · Coach · Slack · Exports
+                  </span>
                 </div>
                 <div>
                   <span className="text-xl font-medium text-[#1A0F00]">$9</span>
@@ -137,27 +142,28 @@ export function Landing() {
                 — 10 meetings/month, no credit card
               </div>
 
+              {/* Trust Signals with green circle backgrounds */}
               <div className="flex flex-wrap gap-3.5 mt-1">
                 <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-text-tertiary)]">
-                  <div className="w-3.5 h-3.5 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="#166534" strokeWidth="1.2">
-                      <path d="M1 4L3 6L7 1" stroke="currentColor" strokeLinecap="round" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-[#4ADE80]/20 flex items-center justify-center">
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                      <path d="M1.5 4L3.5 6L6.5 1.5" stroke="#166534" strokeWidth="1.2" strokeLinecap="round" />
                     </svg>
                   </div>
                   Cancel anytime
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-text-tertiary)]">
-                  <div className="w-3.5 h-3.5 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="#166534" strokeWidth="1.2">
-                      <path d="M1 4L3 6L7 1" stroke="currentColor" strokeLinecap="round" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-[#4ADE80]/20 flex items-center justify-center">
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                      <path d="M1.5 4L3.5 6L6.5 1.5" stroke="#166534" strokeWidth="1.2" strokeLinecap="round" />
                     </svg>
                   </div>
                   Instant setup
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-text-tertiary)]">
-                  <div className="w-3.5 h-3.5 rounded-full bg-green-500/20 flex items-center justify-center">
-                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="#166534" strokeWidth="1.2">
-                      <path d="M1 4L3 6L7 1" stroke="currentColor" strokeLinecap="round" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-[#4ADE80]/20 flex items-center justify-center">
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                      <path d="M1.5 4L3.5 6L6.5 1.5" stroke="#166534" strokeWidth="1.2" strokeLinecap="round" />
                     </svg>
                   </div>
                   No bot required
@@ -166,19 +172,19 @@ export function Landing() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN - Product Preview Card */}
-          <div className="bg-[var(--color-background-primary)] border border-[var(--mm-border)] rounded-xl overflow-hidden">
-            <div className="bg-[var(--color-background-secondary)] px-3.5 py-2.5 border-b border-[var(--mm-border)] flex justify-between items-center">
+          {/* RIGHT COLUMN - Preview Card */}
+          <div className="bg-[var(--color-background-primary)] border border-[var(--color-border-tertiary)] rounded-xl overflow-hidden">
+            <div className="bg-[var(--color-background-secondary)] px-3.5 py-2.5 border-b border-[var(--color-border-tertiary)] flex justify-between items-center">
               <span className="text-xs font-medium">Q3 Product Launch Planning</span>
               <span className="bg-[#14301A] text-[#4ADE80] text-[10px] font-medium px-2 py-0.5 rounded">Live analysis</span>
             </div>
 
-            <div className="grid grid-cols-3 border-b border-[var(--mm-border)]">
-              <div className="px-3 py-2.5 text-center border-r border-[var(--mm-border)]">
+            <div className="grid grid-cols-3 border-b border-[var(--color-border-tertiary)]">
+              <div className="px-3 py-2.5 text-center border-r border-[var(--color-border-tertiary)]">
                 <div className="text-[#4ADE80] text-xl font-medium">8.2</div>
                 <div className="text-[10px] text-[var(--color-text-tertiary)]">Effectiveness</div>
               </div>
-              <div className="px-3 py-2.5 text-center border-r border-[var(--mm-border)]">
+              <div className="px-3 py-2.5 text-center border-r border-[var(--color-border-tertiary)]">
                 <div className="text-[#E8A020] text-xl font-medium">Positive</div>
                 <div className="text-[10px] text-[var(--color-text-tertiary)]">Sentiment</div>
               </div>
@@ -193,7 +199,7 @@ export function Landing() {
                 Action items
               </div>
 
-              <div className="flex items-center gap-2 py-1.5 border-b border-[var(--mm-border)]">
+              <div className="flex items-center gap-2 py-1.5 border-b border-[var(--color-border-tertiary)]">
                 <div className="w-5 h-5 rounded-full bg-[#1E3A5F] flex items-center justify-center text-[8px] font-medium text-[#93C5FD] flex-shrink-0">
                   BC
                 </div>
@@ -202,7 +208,7 @@ export function Landing() {
                 <span className="bg-[#3B0A0A] text-[#F87171] text-[10px] px-1.5 py-0.5 rounded font-medium">High</span>
               </div>
 
-              <div className="flex items-center gap-2 py-1.5 border-b border-[var(--mm-border)]">
+              <div className="flex items-center gap-2 py-1.5 border-b border-[var(--color-border-tertiary)]">
                 <div className="w-5 h-5 rounded-full bg-[#14301A] flex items-center justify-center text-[8px] font-medium text-[#4ADE80] flex-shrink-0">
                   SR
                 </div>
@@ -221,14 +227,15 @@ export function Landing() {
               </div>
             </div>
 
-            <div className="bg-[var(--color-background-secondary)] border-t border-[var(--mm-border)] px-3.5 py-2.5 flex justify-between items-center">
+            {/* Locked Pro Feature Bar */}
+            <div className="bg-[var(--color-background-secondary)] border-t border-[var(--color-border-tertiary)] px-3.5 py-2.5 flex justify-between items-center">
               <div className="flex items-center gap-1.5">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#E8A020" strokeWidth="1.2">
                   <rect x="3" y="6" width="8" height="7" rx="1" fill="none" />
                   <path d="M5 6V4C5 2.5 5.5 1 7 1C8.5 1 9 2.5 9 4V6" stroke="currentColor" fill="none" />
                 </svg>
                 <span className="text-[11px] text-[var(--color-text-secondary)]">
-                  Meeting Coach + Slack sync — <span className="text-[#E8A020]">Pro feature</span>
+                  Meeting Coach + Slack sync — <span className="text-[#E8A020] font-medium">Pro feature</span>
                 </span>
               </div>
               <button
@@ -243,23 +250,23 @@ export function Landing() {
       </section>
 
       {/* SOCIAL PROOF STRIP */}
-      <section className="bg-[var(--color-background-secondary)] border-y border-[var(--mm-border)] py-4 px-6">
+      <section className="bg-[var(--color-background-secondary)] border-y border-[var(--color-border-tertiary)] py-4 px-6">
         <div className="flex flex-wrap items-center justify-center gap-6 max-w-7xl mx-auto">
           <div className="text-center">
             <div className="text-[#E8A020] text-xl font-medium">13</div>
             <div className="text-[11px] text-[var(--color-text-tertiary)]">AI extractions</div>
           </div>
-          <div className="w-px h-8 bg-[var(--mm-border)] hidden sm:block" />
+          <div className="w-px h-8 bg-[var(--color-border-tertiary)] hidden sm:block" />
           <div className="text-center">
             <div className="text-[#E8A020] text-xl font-medium">0</div>
             <div className="text-[11px] text-[var(--color-text-tertiary)]">bots to install</div>
           </div>
-          <div className="w-px h-8 bg-[var(--mm-border)] hidden sm:block" />
+          <div className="w-px h-8 bg-[var(--color-border-tertiary)] hidden sm:block" />
           <div className="text-center">
             <div className="text-[#E8A020] text-xl font-medium">~4 min</div>
             <div className="text-[11px] text-[var(--color-text-tertiary)]">avg analysis time</div>
           </div>
-          <div className="w-px h-8 bg-[var(--mm-border)] hidden sm:block" />
+          <div className="w-px h-8 bg-[var(--color-border-tertiary)] hidden sm:block" />
           <div className="max-w-[280px]">
             <div className="text-xs text-[var(--color-text-secondary)] italic leading-relaxed">
               "We used to spend 20 minutes writing up meeting notes. Now it's done before we close the Zoom window."
@@ -298,7 +305,7 @@ export function Landing() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 max-w-3xl mx-auto">
             {/* FREE PLAN */}
-            <div className="bg-[var(--color-background-primary)] border border-[var(--mm-border)] rounded-xl p-3.5">
+            <div className="bg-[var(--color-background-primary)] border border-[var(--color-border-tertiary)] rounded-xl p-3.5">
               <div className="text-[13px] font-medium mb-0.5">Free</div>
               <div className="mb-1.5">
                 <span className="text-[22px] font-medium">$0</span>
@@ -326,13 +333,13 @@ export function Landing() {
               </div>
               <button
                 onClick={handleStartFree}
-                className="w-full py-2 rounded-md text-xs font-medium border border-[var(--mm-border)] bg-transparent text-[var(--color-text-secondary)] hover:opacity-85 transition"
+                className="w-full py-2 rounded-md text-xs font-medium border border-[var(--color-border-tertiary)] bg-transparent text-[var(--color-text-secondary)] hover:opacity-85 transition"
               >
                 Start free
               </button>
             </div>
 
-            {/* PRO PLAN (Featured) */}
+            {/* PRO PLAN - Featured */}
             <div className="bg-[var(--color-background-primary)] border-2 border-[#E8A020] rounded-xl p-3.5 relative">
               <div className="mb-1">
                 <span className="bg-[#E8A020] text-[#1A0F00] text-[10px] font-medium px-2 py-0.5 rounded inline-block">
@@ -376,7 +383,7 @@ export function Landing() {
             </div>
 
             {/* BUSINESS PLAN */}
-            <div className="bg-[var(--color-background-primary)] border border-[var(--mm-border)] rounded-xl p-3.5">
+            <div className="bg-[var(--color-background-primary)] border border-[var(--color-border-tertiary)] rounded-xl p-3.5">
               <div className="text-[13px] font-medium mb-0.5">Business</div>
               <div className="mb-1.5">
                 <span className="text-[22px] font-medium">$29</span>
@@ -404,7 +411,7 @@ export function Landing() {
               </div>
               <button
                 onClick={() => console.log('Contact sales')}
-                className="w-full py-2 rounded-md text-xs font-medium border border-[var(--mm-border)] bg-transparent text-[var(--color-text-secondary)] hover:opacity-85 transition"
+                className="w-full py-2 rounded-md text-xs font-medium border border-[var(--color-border-tertiary)] bg-transparent text-[var(--color-text-secondary)] hover:opacity-85 transition"
               >
                 Contact sales
               </button>
