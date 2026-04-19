@@ -1,0 +1,23 @@
+name = "meetingmind-api"
+main = "src/index.ts"
+compatibility_date = "2024-03-20"
+compatibility_flags = ["nodejs_compat"]
+
+[[env.staging]]
+name = "meetingmind-api-staging"
+vars = { ENVIRONMENT = "staging" }
+
+[[env.production]]
+name = "meetingmind-api"
+vars = { ENVIRONMENT = "production" }
+
+[env.production.triggers]
+crons = ["0 9 * * 1"]
+
+[vars]
+SUPABASE_URL = ""
+SUPABASE_SERVICE_ROLE_KEY = ""
+ASSEMBLYAI_API_KEY = ""
+GROQ_API_KEY_1 = ""
+GROQ_API_KEY_2 = ""
+GROQ_API_KEY_3 = ""

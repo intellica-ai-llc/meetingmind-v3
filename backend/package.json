@@ -1,0 +1,23 @@
+{
+  "name": "meetingmind-backend",
+  "version": "3.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev src/index.ts",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:prod": "wrangler deploy --env production",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "assemblyai": "^4.30.0",
+    "groq-sdk": "^0.5.0",
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240320.0",
+    "typescript": "^5.2.2",
+    "wrangler": "^3.48.0"
+  }
+}
