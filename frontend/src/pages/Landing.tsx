@@ -44,7 +44,7 @@ export function Landing() {
         </div>
       </div>
 
-      {/* NAVIGATION - Fixed: light background, border-bottom, gold "Mind" */}
+      {/* NAVIGATION */}
       <nav className="bg-[var(--color-background-primary)] border-b border-[var(--color-border-tertiary)] px-6 py-3">
         <div className="flex items-center justify-between">
           <div className="text-base font-medium">
@@ -79,25 +79,12 @@ export function Landing() {
         </div>
       </nav>
 
-      {/* VERIFICATION BANNER - REMOVE AFTER TESTING */}
-      <div style={{
-        background: '#E8A020',
-        color: '#1A0F00',
-        textAlign: 'center',
-        padding: '12px 20px',
-        fontSize: '14px',
-        fontWeight: 'bold',
-        borderBottom: '2px solid #C47E0A'
-      }}>
-        ✅ DEPLOYMENT VERIFIED — BUILD {new Date().toISOString()} ✅
-      </div>
-
-      {/* HERO SECTION - Fixed: light background */}
+      {/* HERO SECTION */}
       <section className="px-6 py-12 md:py-16 bg-[var(--color-background-primary)]">
         <div className="grid md:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* LEFT COLUMN */}
           <div>
-            {/* Social Proof Avatar Stack - Fixed: overlapping circles with proper colors */}
+            {/* Social Proof Avatar Stack */}
             <div className="flex items-center gap-2 mb-4">
               <div className="flex items-center">
                 <div className="w-[22px] h-[22px] rounded-full bg-[#1E3A5F] border-2 border-[var(--color-background-primary)] flex items-center justify-center text-[9px] font-medium text-[#93C5FD] z-0">
@@ -118,7 +105,7 @@ export function Landing() {
               </span>
             </div>
 
-            {/* H1 - Fixed: three lines with <br> tags */}
+            {/* H1 */}
             <h1 className="text-[30px] font-medium leading-tight tracking-[-0.5px] mb-3">
               Stop losing decisions<br />
               and action items<br />
@@ -155,7 +142,7 @@ export function Landing() {
                 — 10 meetings/month, no credit card
               </div>
 
-              {/* Trust Signals - Fixed: green circle with SVG checkmark */}
+              {/* Trust Signals */}
               <div className="flex flex-wrap gap-3.5 mt-1">
                 <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-text-tertiary)]">
                   <div className="w-3.5 h-3.5 rounded-full bg-[#4ADE80]/20 flex items-center justify-center">
@@ -185,7 +172,7 @@ export function Landing() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN - Preview Card (height auto, no fixed height) */}
+          {/* RIGHT COLUMN - Preview Card */}
           <div className="bg-[var(--color-background-primary)] border border-[var(--color-border-tertiary)] rounded-xl overflow-hidden">
             <div className="bg-[var(--color-background-secondary)] px-3.5 py-2.5 border-b border-[var(--color-border-tertiary)] flex justify-between items-center">
               <span className="text-xs font-medium">Q3 Product Launch Planning</span>
@@ -240,7 +227,7 @@ export function Landing() {
               </div>
             </div>
 
-            {/* Locked Pro Feature Bar - Fixed: gold "Pro feature" text */}
+            {/* Locked Pro Feature Bar */}
             <div className="bg-[var(--color-background-secondary)] border-t border-[var(--color-border-tertiary)] px-3.5 py-2.5 flex justify-between items-center">
               <div className="flex items-center gap-1.5">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#E8A020" strokeWidth="1.2">
@@ -262,7 +249,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* SOCIAL PROOF STRIP - NEW */}
+      {/* SOCIAL PROOF STRIP */}
       <section className="bg-[var(--color-background-secondary)] border-y border-[var(--color-border-tertiary)] py-4 px-6">
         <div className="flex flex-wrap items-center justify-center gap-6 max-w-7xl mx-auto">
           <div className="text-center">
@@ -291,7 +278,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* URGENCY BAR - NEW */}
+      {/* URGENCY BAR */}
       <section className="bg-[#1A0F00] py-2.5 px-6">
         <div className="flex flex-wrap items-center justify-center gap-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-1.5 text-[#FCD97A] text-xs">
@@ -309,7 +296,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* PRICING SECTION - NEW */}
+      {/* PRICING SECTION */}
       <section id="pricing" className="py-7 px-6 bg-[var(--color-background-primary)]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center text-[11px] font-medium uppercase tracking-[0.6px] text-[var(--color-text-tertiary)] mb-4">
