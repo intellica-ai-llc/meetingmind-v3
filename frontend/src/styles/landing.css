@@ -1,0 +1,11 @@
+/* Light theme overrides for landing page */
+.landing-page {
+  --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F8F9FA;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary: #9CA3AF;
+  --color-border-tertiary: #E5E7EB;
+  --color-background-primary: #FFFFFF;
+  --color-background-secondary: #F8F9FA;
+}
