@@ -79,6 +79,19 @@ export function Landing() {
         </div>
       </nav>
 
+      {/* VERIFICATION BANNER - REMOVE AFTER TESTING */}
+      <div style={{
+        background: '#E8A020',
+        color: '#1A0F00',
+        textAlign: 'center',
+        padding: '12px 20px',
+        fontSize: '14px',
+        fontWeight: 'bold',
+        borderBottom: '2px solid #C47E0A'
+      }}>
+        ✅ DEPLOYMENT VERIFIED — BUILD {new Date().toISOString()} ✅
+      </div>
+
       {/* HERO SECTION - Fixed: light background */}
       <section className="px-6 py-12 md:py-16 bg-[var(--color-background-primary)]">
         <div className="grid md:grid-cols-2 gap-8 max-w-7xl mx-auto">
