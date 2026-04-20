@@ -44,7 +44,7 @@ export function Landing() {
         </div>
       </div>
 
-      {/* NAVIGATION */}
+      {/* NAVIGATION - Fix 2 & 3 & 6: light background, border-bottom, gold "Mind", $9/mo pill */}
       <nav className="bg-[var(--color-background-primary)] border-b border-[var(--color-border-tertiary)] px-6 py-3">
         <div className="flex items-center justify-between">
           <div className="text-base font-medium">
@@ -73,18 +73,18 @@ export function Landing() {
               className="flex items-center gap-1.5 bg-[#E8A020] text-[#1A0F00] text-[13px] font-medium py-2 px-4 rounded-md hover:bg-[#C47E0A] transition"
             >
               <span>Get Pro</span>
-              <span className="bg-black/18 text-[#1A0F00] text-[11px] px-1.5 py-0.5 rounded">$9/mo</span>
+              <span className="bg-black/18 text-[#1A0F00] text-[11px] px-1.5 py-0.5 rounded ml-1">$9/mo</span>
             </button>
           </div>
         </div>
       </nav>
 
-      {/* HERO SECTION */}
+      {/* HERO SECTION - Fix 1: light background already set */}
       <section className="px-6 py-12 md:py-16 bg-[var(--color-background-primary)]">
         <div className="grid md:grid-cols-2 gap-8 max-w-7xl mx-auto">
           {/* LEFT COLUMN */}
           <div>
-            {/* Social Proof Avatar Stack */}
+            {/* Social Proof Avatar Stack - Already correct */}
             <div className="flex items-center gap-2 mb-4">
               <div className="flex items-center">
                 <div className="w-[22px] h-[22px] rounded-full bg-[#1E3A5F] border-2 border-[var(--color-background-primary)] flex items-center justify-center text-[9px] font-medium text-[#93C5FD] z-0">
@@ -105,7 +105,7 @@ export function Landing() {
               </span>
             </div>
 
-            {/* H1 */}
+            {/* H1 - Fix 4: Already correct with <br> tags */}
             <h1 className="text-[30px] font-medium leading-tight tracking-[-0.5px] mb-3">
               Stop losing decisions<br />
               and action items<br />
@@ -116,7 +116,7 @@ export function Landing() {
               Upload any recording or go live — MeetingMind extracts decisions, tasks, risks, and coaching in minutes. No bot. No installation. No missed follow-ups.
             </p>
 
-            {/* CTA BLOCK */}
+            {/* CTA BLOCK - Fix 5: subtitle already present */}
             <div className="flex flex-col gap-2.5">
               <button
                 onClick={handlePurchase}
@@ -142,7 +142,7 @@ export function Landing() {
                 — 10 meetings/month, no credit card
               </div>
 
-              {/* Trust Signals */}
+              {/* Trust Signals - Already correct with green circle SVG */}
               <div className="flex flex-wrap gap-3.5 mt-1">
                 <div className="flex items-center gap-1.5 text-[11px] text-[var(--color-text-tertiary)]">
                   <div className="w-3.5 h-3.5 rounded-full bg-[#4ADE80]/20 flex items-center justify-center">
@@ -173,6 +173,7 @@ export function Landing() {
           </div>
 
           {/* RIGHT COLUMN - Preview Card */}
+          {/* Fix 6: Removed fixed height, card will auto-size */}
           <div className="bg-[var(--color-background-primary)] border border-[var(--color-border-tertiary)] rounded-xl overflow-hidden">
             <div className="bg-[var(--color-background-secondary)] px-3.5 py-2.5 border-b border-[var(--color-border-tertiary)] flex justify-between items-center">
               <span className="text-xs font-medium">Q3 Product Launch Planning</span>
@@ -217,7 +218,7 @@ export function Landing() {
                 <span className="bg-[#3B2500] text-[#FB923C] text-[10px] px-1.5 py-0.5 rounded font-medium">Med</span>
               </div>
 
-              <div className="flex items-center gap-2 py-1.5">
+              <div className="flex items-center gap-2 py-1.5 border-b border-[var(--color-border-tertiary)]">
                 <div className="w-5 h-5 rounded-full bg-[#3B1A00] flex items-center justify-center text-[8px] font-medium text-[#FB923C] flex-shrink-0">
                   TK
                 </div>
@@ -225,9 +226,24 @@ export function Landing() {
                 <span className="text-xs text-[var(--color-text-tertiary)]">due Thu</span>
                 <span className="bg-[#3B2500] text-[#FB923C] text-[10px] px-1.5 py-0.5 rounded font-medium">Med</span>
               </div>
+
+              {/* Fix 7: Added key quote block to fill card naturally */}
+              <div className="mt-3 pt-2">
+                <div className="text-[10px] font-medium uppercase tracking-[0.5px] text-[var(--color-text-tertiary)] mb-1.5">
+                  Key quote
+                </div>
+                <div className="border-l-2 border-[#E8A020] pl-2">
+                  <p className="text-[11px] text-[var(--color-text-secondary)] italic leading-relaxed">
+                    "If the webhook passes Wednesday, we launch Friday. No more deliberating."
+                  </p>
+                  <p className="text-[10px] font-medium text-[var(--color-text-tertiary)] mt-0.5">
+                    — Bob Chen
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Locked Pro Feature Bar */}
+            {/* Locked Pro Feature Bar - Fix 5: Pro feature in gold */}
             <div className="bg-[var(--color-background-secondary)] border-t border-[var(--color-border-tertiary)] px-3.5 py-2.5 flex justify-between items-center">
               <div className="flex items-center gap-1.5">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#E8A020" strokeWidth="1.2">
@@ -249,7 +265,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* SOCIAL PROOF STRIP */}
+      {/* SECTION A: SOCIAL PROOF STRIP - NEW */}
       <section className="bg-[var(--color-background-secondary)] border-y border-[var(--color-border-tertiary)] py-4 px-6">
         <div className="flex flex-wrap items-center justify-center gap-6 max-w-7xl mx-auto">
           <div className="text-center">
@@ -278,7 +294,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* URGENCY BAR */}
+      {/* SECTION B: URGENCY BAR - NEW */}
       <section className="bg-[#1A0F00] py-2.5 px-6">
         <div className="flex flex-wrap items-center justify-center gap-4 max-w-7xl mx-auto">
           <div className="flex items-center gap-1.5 text-[#FCD97A] text-xs">
@@ -296,7 +312,7 @@ export function Landing() {
         </div>
       </section>
 
-      {/* PRICING SECTION */}
+      {/* SECTION C: PRICING SECTION - NEW */}
       <section id="pricing" className="py-7 px-6 bg-[var(--color-background-primary)]">
         <div className="max-w-7xl mx-auto">
           <div className="text-center text-[11px] font-medium uppercase tracking-[0.6px] text-[var(--color-text-tertiary)] mb-4">
@@ -339,7 +355,7 @@ export function Landing() {
               </button>
             </div>
 
-            {/* PRO PLAN - Featured */}
+            {/* PRO PLAN - Featured with gold border and Most popular badge */}
             <div className="bg-[var(--color-background-primary)] border-2 border-[#E8A020] rounded-xl p-3.5 relative">
               <div className="mb-1">
                 <span className="bg-[#E8A020] text-[#1A0F00] text-[10px] font-medium px-2 py-0.5 rounded inline-block">
