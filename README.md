@@ -1,6 +1,6 @@
 # MeetingMind v3.0
 
-AI-powered meeting analysis that turns conversations into action items, decisions, and follow-up emails.
+multi Agent powered meeting analysis that turns conversations into action items, decisions, and follow-up emails.
 
 ## Features
 
