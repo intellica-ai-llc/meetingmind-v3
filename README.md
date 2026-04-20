@@ -1,8 +1,8 @@
 # MeetingMind v3.0
 
-multi Agent powered meeting analysis that turns conversations into action items, decisions, and follow-up emails.
+multi Agent powered meeting analysis that turns conversations into action items, decisions, and follow-up emails and detailed reports.
 
-## Features
+## Features 
 
 - 🎙️ Browser-based recording (no bot required)
 - 📁 MP3/M4A file upload
