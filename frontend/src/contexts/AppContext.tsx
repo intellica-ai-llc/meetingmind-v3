@@ -292,13 +292,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setFileError(file ? (validateFile(file) || '') : '')
   }
 
+  const handleUpload = async () => {
     if (!audioFile) { setFileError('No file selected.'); return }
     const err = validateFile(audioFile)
     if (err) { setFileError(err); return }
     await uploadAudioFile(audioFile)
-    const err = validateFile(audioFile)
-    if (err) { setFileError(err); return }
-    if (audioFile) await uploadAudioFile(audioFile)
   }
 
   // ── Name confirm ─────────────────────────────────────────
