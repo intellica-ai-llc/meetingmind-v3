@@ -98,10 +98,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [demoMode, setDemoMode] = useState(false)
 
   // ── Refs ─────────────────────────────────────────────────
-  const pollRef = useRef<NodeJS.Timeout | null>(null)
+  const pollRef = useRef<number | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
-  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const recordingTimerRef = useRef<number | null>(null)
 
   // ── Reset ────────────────────────────────────────────────
   const reset = () => {
@@ -292,7 +292,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setFileError(file ? (validateFile(file) || '') : '')
   }
 
-  const handleUpload = async () => {
+    if (!audioFile) { setFileError('No file selected.'); return }
+    const err = validateFile(audioFile)
+    if (err) { setFileError(err); return }
+    await uploadAudioFile(audioFile)
     const err = validateFile(audioFile)
     if (err) { setFileError(err); return }
     if (audioFile) await uploadAudioFile(audioFile)
