@@ -9,6 +9,8 @@ import meetingsRoutes from './routes/meetings'
 import tasksRoutes from './routes/tasks'
 import threadsRoutes from './routes/threads'
 import patternsRoutes from './routes/patterns'
+import paymentsRoutes from './routes/payments'
+import webhookRoutes from './routes/webhooks'
 
 const app = new Hono()
 
@@ -25,5 +27,7 @@ app.route('/api/meetings', meetingsRoutes)
 app.route('/api/tasks', tasksRoutes)
 app.route('/api/threads', threadsRoutes)
 app.route('/api/patterns', patternsRoutes)
+app.route('/api/payments', paymentsRoutes)
+app.route('/api/payments', webhookRoutes)
 
 export default app
