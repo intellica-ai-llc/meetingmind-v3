@@ -1,14 +1,39 @@
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 
 export function Landing() {
   const { user } = useAuth()
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!user) {
       localStorage.setItem('redirectAfterAuth', '/pricing')
       window.location.href = '/register'
-    } else {
-      console.log('Open purchase flow for user:', user.id)
+      return
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+
+      const response = await fetch('https://meetingmind-api-production.intellicaai-ai.workers.dev/api/payments/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          priceId: 'price_1TP7vNA67WFEmKggjsbh4UAQ',
+          successUrl: window.location.origin + '/dashboard?payment=success',
+          cancelUrl: window.location.origin + '/pricing'
+        })
+      })
+
+      const { url } = await response.json()
+      if (url) {
+        window.location.href = url
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
     }
   }
 
@@ -381,7 +406,7 @@ export function Landing() {
                 </li>
               ))}
             </ul>
-            <button onClick={() => console.log('Contact sales')} style={{ width: '100%', background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.65)', borderRadius: '10px', padding: '12px', fontSize: '14px', cursor: 'pointer' }}>
+            <button onClick={handlePurchase} style={{ width: '100%', background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.65)', borderRadius: '10px', padding: '12px', fontSize: '14px', cursor: 'pointer' }}>
               Contact sales →
             </button>
           </div>
