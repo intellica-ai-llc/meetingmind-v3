@@ -1,10 +1,7 @@
 import React, { createContext, useContext, useState, useRef, useCallback } from 'react'
-import axios from 'axios'
+import { api } from '@/lib/api'
 
 export type Step = 'upload' | 'recording' | 'processing' | 'name_speakers' | 'analyzing' | 'results' | 'error'
-
-// Environment config
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 // Demo data
 const DEMO_UTTERANCES = [
@@ -152,7 +149,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const form = new FormData()
       form.append('audio', file)
-      const res = await axios.post(`${API}/transcribe`, form)
+      const res = await api.post('/transcribe', form, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
       if (res.data.error) throw new Error(res.data.error)
       setStatusMsg('Transcribing and identifying speakers... (30–90 sec)')
       startPolling(res.data.job_id)
@@ -167,7 +166,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (pollRef.current) clearInterval(pollRef.current)
     pollRef.current = setInterval(async () => {
       try {
-        const res = await axios.get(`${API}/status/${id}`)
+        const res = await api.get(`/status/${id}`)
         if (res.data.status === 'error') {
           if (pollRef.current) clearInterval(pollRef.current)
           setError('AssemblyAI transcription failed. Please try again.')
@@ -205,7 +204,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setNamedTranscript(transcript)
 
       setStatusMsg('Groq extracting 13 insights...')
-      const r2 = await axios.post(`${API}/analyze`, {
+      const r2 = await api.post('/analyze', {
         utterances: utts,
         speaker_map: spkMap,
         meeting_context,
@@ -214,7 +213,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setResults(r2.data)
 
       setStatusMsg('Drafting follow-up email...')
-      const r3 = await axios.post(`${API}/draft-email`, {
+      const r3 = await api.post('/draft-email', {
         ...r2.data,
         meeting_context,
         tone: emailTone,
@@ -224,7 +223,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       setStatusMsg('Running meeting coach...')
       try {
-        const r4 = await axios.post(`${API}/coach`, {
+        const r4 = await api.post('/coach', {
           effectiveness_score: r2.data.effectiveness_score,
           effectiveness_reason: r2.data.effectiveness_reason,
           open_questions: r2.data.open_questions,
@@ -340,7 +339,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!results) return
     setRegenLoading(true)
     try {
-      const res = await axios.post(`${API}/draft-email`, {
+      const res = await api.post('/draft-email', {
         ...results,
         meeting_context: { title: meetingTitle, date: meetingDate },
         tone,
