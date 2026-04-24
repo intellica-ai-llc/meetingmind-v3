@@ -434,6 +434,21 @@ export function Landing() {
         </div>
       </section>
 
+      {/* ── FOOTER ── */}
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '40px', marginTop: '60px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+          <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>
+            © 2026 MeetingMind. All rights reserved.
+          </div>
+          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+            <a href="/refund-policy" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>Refund Policy</a>
+            <a href="/terms" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>Terms of Service</a>
+            <a href="/privacy" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>Privacy Policy</a>
+            <a href="/contact" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>Contact</a>
+          </div>
+        </div>
+      </footer>
+
       {/* ── PULSE ANIMATION ── */}
       <style>{`
         @keyframes mm-pulse {
