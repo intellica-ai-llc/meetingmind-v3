@@ -1,0 +1,45 @@
+/* ── MEETINGMIND V4 DESIGN TOKENS ── */
+:root {
+  /* Depth layers */
+  --mm-bg-primary: #0A0B1A;
+  --mm-bg-secondary: #0F1130;
+  --mm-bg-elevated: #161842;
+
+  /* Accents */
+  --mm-cyan: #00D4FF;
+  --mm-purple: #7B61FF;
+  --mm-success: #00C896;
+  --mm-warning: #FFB547;
+  --mm-danger: #FF4D6A;
+  --mm-low-priority: #4CAF50;
+
+  /* Text */
+  --mm-text-primary: #FFFFFF;
+  --mm-text-secondary: #A0AEC0;
+  --mm-text-muted: #4A5568;
+
+  /* Gradients */
+  --mm-gradient-page: linear-gradient(135deg, #0A0B1A 0%, #1A1060 50%, #0A0B1A 100%);
+  --mm-gradient-button: linear-gradient(135deg, #00D4FF, #7B61FF);
+
+  /* Glows */
+  --mm-glow-cyan: 0 0 20px rgba(0, 212, 255, 0.3);
+  --mm-glow-purple: 0 0 20px rgba(123, 97, 255, 0.3);
+
+  /* Borders & Radius */
+  --mm-border-glass: 1px solid rgba(255, 255, 255, 0.08);
+  --mm-radius-card: 12px;
+  --mm-radius-button: 10px;
+  --mm-radius-badge: 6px;
+
+  /* Typography */
+  --mm-font-heading: 'Manrope', 'Inter', system-ui, sans-serif;
+  --mm-font-body: 'Inter', system-ui, sans-serif;
+  --mm-font-mono: 'JetBrains Mono', monospace;
+
+  --mm-fs-title: 28px;
+  --mm-fs-section: 20px;
+  --mm-fs-card-title: 16px;
+  --mm-fs-body: 14px;
+  --mm-fs-label: 12px;
+}

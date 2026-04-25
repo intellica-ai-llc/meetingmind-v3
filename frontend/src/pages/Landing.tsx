@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 export function Landing() {
   const { user } = useAuth()
 
-  const handlePurchase = async () => {
+  const handlePurchase = async (priceId: string, planType: string) => {
     if (!user) {
       localStorage.setItem('redirectAfterAuth', '/pricing')
       window.location.href = '/register'
@@ -22,7 +22,8 @@ export function Landing() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          priceId: 'price_1TP7vNA67WFEmKggjsbh4UAQ',
+          priceId,
+          planType,
           successUrl: window.location.origin + '/dashboard?payment=success',
           cancelUrl: window.location.origin + '/pricing'
         })
@@ -61,7 +62,7 @@ export function Landing() {
           First 500 users get Pro free for 30 days — <strong>347 spots remaining</strong>
         </span>
         <button
-          onClick={handlePurchase}
+          onClick={() => handlePurchase('price_1TP7vNA67WFEmKggjsbh4UAQ', 'pro')}
           style={{ background: '#fff', color: '#4f46e5', borderRadius: '20px', padding: '4px 14px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', border: 'none', whiteSpace: 'nowrap' }}
         >
           Claim your free month →
@@ -87,7 +88,7 @@ export function Landing() {
             Sign in
           </button>
           <button
-            onClick={handlePurchase}
+            onClick={() => handlePurchase('price_1TP7vNA67WFEmKggjsbh4UAQ', 'pro')}
             style={{ background: '#7c3aed', border: 'none', color: '#fff', borderRadius: '8px', padding: '8px 18px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}
           >
             Get Pro — $9/mo
@@ -135,7 +136,7 @@ export function Landing() {
           {/* CTAs */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <button
-              onClick={handlePurchase}
+              onClick={() => handlePurchase('price_1TP7vNA67WFEmKggjsbh4UAQ', 'pro')}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#7c3aed', border: 'none', color: '#fff', borderRadius: '12px', padding: '16px 24px', fontSize: '16px', fontWeight: 700, cursor: 'pointer', width: '100%', maxWidth: '380px' }}
             >
               <span>Start Pro free for 30 days</span>
@@ -236,7 +237,7 @@ export function Landing() {
                 </span>
               </div>
               <button
-                onClick={handlePurchase}
+                onClick={() => handlePurchase('price_1TP7vNA67WFEmKggjsbh4UAQ', 'pro')}
                 style={{ background: '#7c3aed', border: 'none', color: '#fff', borderRadius: '8px', padding: '7px 16px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
               >
                 Unlock →
@@ -389,7 +390,7 @@ export function Landing() {
                 </li>
               ))}
             </ul>
-            <button onClick={handlePurchase} style={{ width: '100%', background: '#7c3aed', border: 'none', color: '#fff', borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={() => handlePurchase('price_1TP7vNA67WFEmKggjsbh4UAQ', 'pro')} style={{ width: '100%', background: '#7c3aed', border: 'none', color: '#fff', borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
               Get Pro — $9/mo →
             </button>
           </div>
@@ -406,8 +407,8 @@ export function Landing() {
                 </li>
               ))}
             </ul>
-            <button onClick={handlePurchase} style={{ width: '100%', background: 'none', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.65)', borderRadius: '10px', padding: '12px', fontSize: '14px', cursor: 'pointer' }}>
-              Contact sales →
+            <button onClick={() => handlePurchase('price_1TP86WA67WFEmKgggQizCLK6', 'business')} style={{ width: '100%', background: '#7c3aed', border: 'none', color: '#fff', borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
+              Get Business — $29/mo →
             </button>
           </div>
 
