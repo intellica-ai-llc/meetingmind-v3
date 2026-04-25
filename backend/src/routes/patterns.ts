@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { createClient } from '@supabase/supabase-js'
+import { requirePlan } from '../middleware/entitlement' // ← new import
 
 const app = new Hono()
 
@@ -11,7 +12,8 @@ app.get('/', async (c) => {
   return c.json({ patterns: data })
 })
 
-app.post('/refresh', async (c) => {
+// Only Pro/Business users can trigger a pattern refresh
+app.post('/refresh', requirePlan('pro'), async (c) => {
   const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
   const { data: meetings } = await supabase.from('meetings').select('effectiveness_score, created_at').eq('user_id', user.id).order('created_at', { ascending: true })

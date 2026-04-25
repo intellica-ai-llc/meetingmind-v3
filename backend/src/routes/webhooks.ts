@@ -35,13 +35,14 @@ app.post('/webhook', async (c) => {
       const userId = session.client_reference_id
       const customerId = session.customer
       const subscriptionId = session.subscription
+      const planType = session.metadata?.planType || 'pro'
       
       await supabase
         .from('profiles')
         .update({
           stripe_customer_id: customerId,
           stripe_subscription_id: subscriptionId,
-          subscription_tier: 'pro',
+          subscription_tier: planType,
           subscription_status: 'active'
         })
         .eq('id', userId)
@@ -60,11 +61,14 @@ app.post('/webhook', async (c) => {
         .single()
       
       if (profile) {
+        const tier = subscription.status === 'active' 
+          ? (profile.subscription_tier || 'pro') 
+          : 'free'
         await supabase
           .from('profiles')
           .update({
             subscription_status: subscription.status,
-            subscription_tier: subscription.status === 'active' ? 'pro' : 'free'
+            subscription_tier: tier
           })
           .eq('id', profile.id)
       }

@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import Groq from 'groq-sdk'
+import { requirePlan } from '../middleware/entitlement' // ← new import
 
 const app = new Hono()
 
@@ -37,7 +38,8 @@ app.post('/draft-email', async (c) => {
   return c.json({ email: emailText })
 })
 
-app.post('/coach', async (c) => {
+// Now protected: only Pro/Business users can access coaching
+app.post('/coach', requirePlan('pro'), async (c) => {
   const groq = new Groq({ apiKey: c.env.GROQ_API_KEY_1 })
   
   const data = await c.req.json()
