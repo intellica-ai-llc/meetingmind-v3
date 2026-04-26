@@ -212,6 +212,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (r2.data.error) throw new Error(r2.data.error)
       setResults(r2.data)
 
+      // ── Persist meeting to database ──────────────────────
+      try {
+        const totalMs = utts.reduce((sum: number, u: any) => sum + (u.duration_ms || 0), 0)
+        const durationMinutes = Math.round(totalMs / 60000)
+        await api.post('/meetings', {
+          title: meetingTitle || 'Untitled Meeting',
+          meeting_date: meetingDate,
+          duration_minutes: durationMinutes || null,
+          summary: r2.data.summary,
+          decisions: r2.data.decisions || [],
+          action_items: r2.data.action_items || [],
+          open_questions: r2.data.open_questions || [],
+          parking_lot: r2.data.parking_lot || [],
+          key_topics: r2.data.key_topics || [],
+          key_quotes: r2.data.key_quotes || [],
+          sentiment: r2.data.sentiment || null,
+          sentiment_reason: r2.data.sentiment_reason || null,
+          effectiveness_score: r2.data.effectiveness_score || null,
+          effectiveness_reason: r2.data.effectiveness_reason || null,
+          next_agenda: r2.data.next_agenda || [],
+          risk_flags: r2.data.risk_flags || [],
+          meeting_type: r2.data.meeting_type || null,
+        })
+      } catch (saveErr) {
+        console.error('Failed to save meeting to database:', saveErr)
+      }
+
       setStatusMsg('Drafting follow-up email...')
       const r3 = await api.post('/draft-email', {
         ...r2.data,
