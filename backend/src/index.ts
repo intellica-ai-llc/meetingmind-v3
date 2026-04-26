@@ -11,7 +11,8 @@ import threadsRoutes from './routes/threads'
 import patternsRoutes from './routes/patterns'
 import paymentsRoutes from './routes/payments'
 import webhookRoutes from './routes/webhooks'
-import intelligenceRoutes from './routes/intelligence'  // ← new
+import intelligenceRoutes from './routes/intelligence'
+import usageRoutes from './routes/usage'  // ← NEW
 
 const app = new Hono()
 
@@ -30,6 +31,7 @@ app.route('/api/threads', threadsRoutes)
 app.route('/api/patterns', patternsRoutes)
 app.route('/api/payments', paymentsRoutes)
 app.route('/api/payments', webhookRoutes)
-app.route('/api/intelligence', intelligenceRoutes) // ← new
+app.route('/api/intelligence', intelligenceRoutes)
+app.route('/api/usage', usageRoutes)  // ← NEW
 
 export default app

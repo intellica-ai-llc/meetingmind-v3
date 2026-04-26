@@ -3,6 +3,10 @@ main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
+[[kv_namespaces]]
+binding = "MEETING_JOBS"
+id = "5045e3a5c29144f195402d583662790c"
+
 [[env.staging]]
 name = "meetingmind-api-staging"
 vars = { ENVIRONMENT = "staging" }
