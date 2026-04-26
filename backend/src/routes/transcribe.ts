@@ -1,8 +1,7 @@
 import { Hono } from 'hono'
-import { AssemblyAI } from 'assemblyai'
 import { createClient } from '@supabase/supabase-js'
 import { acquireJobSlot, releaseJobSlot } from '../services/concurrency'
-import { trackUsage } from '../services/usage-tracker'
+import { ingest } from '../services/ingestion-orchestrator'
 
 const app = new Hono()
 
@@ -50,7 +49,6 @@ app.post('/transcribe', async (c) => {
   }
 
   try {
-    const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
     const formData = await c.req.formData()
     const audioFile = formData.get('audio') as File
     if (!audioFile) {
@@ -59,69 +57,24 @@ app.post('/transcribe', async (c) => {
     }
 
     const buffer = Buffer.from(await audioFile.arrayBuffer())
-    const transcript = await client.transcripts.submit({
-      audio: buffer,
-      speaker_labels: true,
-      speech_model: 'universal',
-      punctuate: true,
-      format_text: true,
+
+    // Call the orchestrator — it handles all AssemblyAI work and returns the final payload
+    const result = await ingest(c.env, user.id, buffer, audioFile.type)
+
+    // Release the slot only after successful ingestion
+    await releaseJobSlot(c.env)
+
+    return c.json({
+      status: 'complete',
+      utterances: result.utterances,
+      speakers: result.speakers,
+      talk_time: result.talkTime,
+      confidence: result.confidence,
     })
-
-    return c.json({ job_id: transcript.id })
-  } catch (error) {
+  } catch (err: any) {
     await releaseJobSlot(c.env)
-    return c.json({ error: 'Transcription failed' }, 500)
+    return c.json({ error: err.message || 'Transcription failed' }, 500)
   }
-})
-
-app.get('/status/:jobId', async (c) => {
-  const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
-  const jobId = c.req.param('jobId')
-  const transcript = await client.transcripts.get(jobId)
-
-  if (transcript.status === 'error') {
-    await releaseJobSlot(c.env)
-    return c.json({ status: 'error', message: transcript.error })
-  }
-
-  if (transcript.status !== 'completed') return c.json({ status: 'processing' })
-
-  const utterances = transcript.utterances?.map(u => ({
-    speaker: u.speaker,
-    text: u.text,
-    start_ms: u.start,
-    end_ms: u.end,
-    duration_ms: u.end - u.start,
-  })) || []
-
-  const speakers = [...new Set(utterances.map(u => u.speaker))]
-  const talkTime: Record<string, any> = {}
-  let totalMs = 0
-  for (const u of utterances) {
-    talkTime[u.speaker] = { ms: (talkTime[u.speaker]?.ms || 0) + u.duration_ms, minutes: 0, percentage: 0 }
-    totalMs += u.duration_ms
-  }
-  for (const speaker in talkTime) {
-    talkTime[speaker].minutes = Math.round(talkTime[speaker].ms / 60000 * 10) / 10
-    talkTime[speaker].percentage = Math.round((talkTime[speaker].ms / totalMs) * 1000) / 10
-  }
-
-  // Release concurrency slot and track usage
-  await releaseJobSlot(c.env)
-
-  const user = c.get('user')
-  if (user) {
-    const durationSeconds = Math.round(totalMs / 1000)
-    await trackUsage(c.env, user.id, durationSeconds)
-  }
-
-  return c.json({
-    status: 'complete',
-    utterances,
-    speakers,
-    confidence: transcript.confidence ? Math.round(transcript.confidence * 1000) / 10 : null,
-    talk_time: talkTime,
-  })
 })
 
 export default app
