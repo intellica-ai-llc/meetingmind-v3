@@ -16,4 +16,4 @@ name = "meetingmind-api-production"
 vars = { ENVIRONMENT = "production" }
 
 [env.production.triggers]
-crons = ["0 4 * * *"]
+crons = ["*/15 * * * *"]

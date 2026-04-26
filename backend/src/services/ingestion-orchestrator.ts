@@ -2,6 +2,7 @@ import { AssemblyAI } from 'assemblyai'
 import { createClient } from '@supabase/supabase-js'
 import { releaseJobSlot } from './concurrency'
 import { trackUsage } from './usage-tracker'
+import { sendSlackSummary } from './slack' // new: Slack integration
 
 /**
  * Full ingestion pipeline:
@@ -9,7 +10,7 @@ import { trackUsage } from './usage-tracker'
  *  2. Poll until completed or error.
  *  3. Return utterances, speakers, talkTime, confidence.
  *  4. Track usage and release the concurrency slot.
- *  5. (future) trigger Slack / pattern updates.
+ *  5. Send Slack notification if user is on Business tier.
  */
 export async function ingest(
   env: any,
@@ -77,7 +78,13 @@ export async function ingest(
   const durationSeconds = Math.round(totalMs / 1000)
   await trackUsage(env, userId, durationSeconds)
 
-  // 5. Future hooks: pattern refresh, Slack push
+  // 5. Post-processing: Slack notification
+  try {
+    // Placeholder: real meeting title and action items will come from the analysis step later.
+    await sendSlackSummary(env, userId, 'Meeting Processed', 'Your meeting has been processed successfully.', [])
+  } catch (err) {
+    console.error('Slack notification failed:', err)
+  }
 
   return { utterances, speakers, talkTime, confidence }
 }

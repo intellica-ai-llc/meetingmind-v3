@@ -14,6 +14,8 @@ import webhookRoutes from './routes/webhooks'
 import intelligenceRoutes from './routes/intelligence'
 import usageRoutes from './routes/usage'  // ← NEW
 import dashboardRoutes from './routes/dashboard'
+import calendarRoutes from './routes/calendar'
+import slackRoutes from './routes/slack'
 
 const app = new Hono()
 
@@ -35,5 +37,7 @@ app.route('/api/payments', webhookRoutes)
 app.route('/api/intelligence', intelligenceRoutes)
 app.route('/api/usage', usageRoutes)  // ← NEW
 app.route('/api/dashboard', dashboardRoutes)
+app.route('/api/calendar', calendarRoutes)
+app.route('/api/slack', slackRoutes)
 
 export default app
