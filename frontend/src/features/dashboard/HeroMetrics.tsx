@@ -108,7 +108,7 @@ export function HeroMetrics() {
         >
           <div style={{ fontSize: 24, marginBottom: 8 }}>{card.icon}</div>
           <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--mm-text-primary)', lineHeight: 1, marginBottom: 4 }}>
-            {card.format(card.value)}
+            {card.value !== null ? card.format(card.value) : '—'}
           </div>
           <div style={{ fontSize: 13, color: 'var(--mm-text-secondary)', fontWeight: 500 }}>
             {card.label}
