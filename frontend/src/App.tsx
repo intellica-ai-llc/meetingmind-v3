@@ -13,6 +13,7 @@ import { PrivacyPolicy } from '@/pages/PrivacyPolicy'
 import { Contact } from '@/pages/Contact'
 import { Shell } from '@/components/layout/Shell' // ← NEW
 import './styles/globals.css'
+import { Settings } from '@/pages/Settings'
 
 function App() {
   return (
@@ -34,7 +35,7 @@ function App() {
             <Route path="/tasks" element={<ProtectedRoute><Shell><div>Tasks (coming soon)</div></Shell></ProtectedRoute>} />
             <Route path="/patterns" element={<ProtectedRoute><Shell><div>Patterns (coming soon)</div></Shell></ProtectedRoute>} />
             <Route path="/coaching" element={<ProtectedRoute><Shell><div>Coaching (coming soon)</div></Shell></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Shell><div>Settings (coming soon)</div></Shell></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Shell><Settings /></Shell></ProtectedRoute>} />
           </Routes>
         </AppProvider>
       </AuthProvider>

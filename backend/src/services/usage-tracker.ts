@@ -26,9 +26,15 @@ export async function trackUsage(env: any, userId: string, durationSeconds: numb
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id, period_start' })
 
-  // Also update global budget in KV (for emergency monitoring, not user-facing)
-  const globalKey = 'global:usage:hours'
-  const currentHoursStr = await env.MEETING_JOBS.get(globalKey) || '0'
-  const newHours = parseFloat(currentHoursStr) + durationSeconds / 3600
-  await env.MEETING_JOBS.put(globalKey, newHours.toString())
+  // Global budget tracking (safe even if KV is missing)
+  try {
+    if (env.MEETING_JOBS) {
+      const globalKey = 'global:usage:hours'
+      const currentHoursStr = await env.MEETING_JOBS.get(globalKey) || '0'
+      const newHours = parseFloat(currentHoursStr) + durationSeconds / 3600
+      await env.MEETING_JOBS.put(globalKey, newHours.toString())
+    }
+  } catch (err) {
+    console.error('Failed to update global usage in KV:', err)
+  }
 }

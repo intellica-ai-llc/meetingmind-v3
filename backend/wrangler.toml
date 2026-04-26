@@ -14,6 +14,9 @@ vars = { ENVIRONMENT = "staging" }
 [[env.production]]
 name = "meetingmind-api-production"
 vars = { ENVIRONMENT = "production" }
+kv_namespaces = [
+  { binding = "MEETING_JOBS", id = "5045e3a5c29144f195402d583662790c" }
+]
 
 [env.production.triggers]
 crons = ["*/15 * * * *"]

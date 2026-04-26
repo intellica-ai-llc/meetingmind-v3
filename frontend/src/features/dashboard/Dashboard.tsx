@@ -1,10 +1,10 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { TaskDashboard } from './TaskDashboard'
-import { PatternDashboard } from './PatternDashboard'
 import { UnresolvedThreads } from './UnresolvedThreads'
 import { MeetingHistory } from './MeetingHistory'
 import { HeroMetrics } from './HeroMetrics'
 import { CoachPanel } from './CoachPanel'
+import { IntelligencePanel } from './IntelligencePanel'
 
 export function Dashboard() {
   const { user } = useAuth()
@@ -64,7 +64,7 @@ export function Dashboard() {
 
       {/* BOTTOM ROW: Patterns + Threads + Coach */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-        <PatternDashboard />
+        <IntelligencePanel />
         <UnresolvedThreads />
         <CoachPanel />
       </div>

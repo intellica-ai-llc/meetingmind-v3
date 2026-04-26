@@ -17,6 +17,7 @@ import dashboardRoutes from './routes/dashboard'
 import calendarRoutes from './routes/calendar'
 import slackRoutes from './routes/slack'
 
+
 const app = new Hono()
 
 app.use('*', cors())

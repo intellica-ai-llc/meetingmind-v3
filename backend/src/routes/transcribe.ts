@@ -1,7 +1,9 @@
 import { Hono } from 'hono'
+import { AssemblyAI } from 'assemblyai'
 import { createClient } from '@supabase/supabase-js'
 import { acquireJobSlot, releaseJobSlot } from '../services/concurrency'
-import { ingest } from '../services/ingestion-orchestrator'
+import { trackUsage } from '../services/usage-tracker'
+import { sendSlackSummary } from '../services/slack'
 
 const app = new Hono()
 
@@ -9,46 +11,47 @@ app.post('/transcribe', async (c) => {
   const user = c.get('user')
   if (!user) return c.json({ error: 'Unauthorized' }, 401)
 
-  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
-
-  // 1. Check user's monthly limit
-  const now = new Date()
-  const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('subscription_tier, subscription_status')
-    .eq('id', user.id)
-    .single()
-
-  const tier = profile?.subscription_tier || 'free'
-  const isPaid = (tier === 'pro' || tier === 'business') && profile?.subscription_status === 'active'
-
-  if (!isPaid) {
-    const { data: usage } = await supabase
-      .from('monthly_usage')
-      .select('meetings_count')
-      .eq('user_id', user.id)
-      .eq('period_start', periodStart)
-      .maybeSingle()
-
-    if ((usage?.meetings_count || 0) >= 10) {
-      return c.json({
-        error: 'Free tier limit reached (10 meetings/month)',
-        code: 'USAGE_LIMIT',
-      }, 402)
-    }
-  }
-
-  // 2. Concurrency check
-  const slotAcquired = await acquireJobSlot(c.env)
-  if (!slotAcquired) {
-    return c.json({
-      error: 'All servers are currently busy. Upgrade to Pro for priority processing.',
-      code: 'CONCURRENCY_LIMIT',
-    }, 429)
-  }
-
   try {
+    const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
+
+    // 1. Check user's monthly limit
+    const now = new Date()
+    const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_tier, subscription_status')
+      .eq('id', user.id)
+      .single()
+
+    const tier = profile?.subscription_tier || 'free'
+    const isPaid = (tier === 'pro' || tier === 'business') && profile?.subscription_status === 'active'
+
+    if (!isPaid) {
+      const { data: usage } = await supabase
+        .from('monthly_usage')
+        .select('meetings_count')
+        .eq('user_id', user.id)
+        .eq('period_start', periodStart)
+        .maybeSingle()
+
+      if ((usage?.meetings_count || 0) >= 10) {
+        return c.json({
+          error: 'Free tier limit reached (10 meetings/month)',
+          code: 'USAGE_LIMIT',
+        }, 402)
+      }
+    }
+
+    // 2. Concurrency check
+    const slotAcquired = await acquireJobSlot(c.env)
+    if (!slotAcquired) {
+      return c.json({
+        error: 'All servers are currently busy. Upgrade to Pro for priority processing.',
+        code: 'CONCURRENCY_LIMIT',
+      }, 429)
+    }
+
+    // 3. Parse audio file
     const formData = await c.req.formData()
     const audioFile = formData.get('audio') as File
     if (!audioFile) {
@@ -56,24 +59,94 @@ app.post('/transcribe', async (c) => {
       return c.json({ error: 'No audio file provided' }, 400)
     }
 
-    const buffer = Buffer.from(await audioFile.arrayBuffer())
+    // 4. Submit to AssemblyAI — use Blob, not Buffer
+    const blob = new Blob([await audioFile.arrayBuffer()], { type: audioFile.type || 'audio/webm' })
+    const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
+    const transcript = await client.transcripts.submit({
+      audio: blob,
+      speaker_labels: true,
+      speech_models: ['universal'],   // ← FIXED: deprecated speech_model → speech_models (array)
+      punctuate: true,
+      format_text: true,
+    })
 
-    // Call the orchestrator — it handles all AssemblyAI work and returns the final payload
-    const result = await ingest(c.env, user.id, buffer, audioFile.type)
+    // 5. Return job_id immediately
+    return c.json({ job_id: transcript.id })
+  } catch (error: any) {
+    // Release slot on error (best-effort)
+    try { await releaseJobSlot(c.env) } catch {}
 
-    // Release the slot only after successful ingestion
+    // Return the actual error details so we can see what failed
+    return c.json({
+      error: 'Transcription failed',
+      message: error?.message || String(error),
+      stack: error?.stack,
+    }, 500)
+  }
+})
+
+app.get('/status/:jobId', async (c) => {
+  try {
+    const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
+    const jobId = c.req.param('jobId')
+    const transcript = await client.transcripts.get(jobId)
+
+    if (transcript.status === 'error') {
+      await releaseJobSlot(c.env)
+      return c.json({ status: 'error', message: transcript.error })
+    }
+
+    if (transcript.status !== 'completed') return c.json({ status: 'processing' })
+
+    const utterances = transcript.utterances?.map((u: any) => ({
+      speaker: u.speaker,
+      text: u.text,
+      start_ms: u.start,
+      end_ms: u.end,
+      duration_ms: u.end - u.start,
+    })) || []
+
+    const speakers = [...new Set(utterances.map((u: any) => u.speaker))]
+    const talkTime: Record<string, any> = {}
+    let totalMs = 0
+    for (const u of utterances) {
+      talkTime[u.speaker] = talkTime[u.speaker] || { ms: 0, minutes: 0, percentage: 0 }
+      talkTime[u.speaker].ms += u.duration_ms
+      totalMs += u.duration_ms
+    }
+    for (const speaker in talkTime) {
+      talkTime[speaker].minutes = Math.round((talkTime[speaker].ms / 60000) * 10) / 10
+      talkTime[speaker].percentage = Math.round((talkTime[speaker].ms / totalMs) * 1000) / 10
+    }
+
+    const confidence = transcript.confidence ? Math.round(transcript.confidence * 1000) / 10 : null
+
     await releaseJobSlot(c.env)
+
+    const user = c.get('user')
+    if (user) {
+      const durationSeconds = Math.round(totalMs / 1000)
+      await trackUsage(c.env, user.id, durationSeconds)
+
+      try {
+        await sendSlackSummary(c.env, user.id, 'Meeting Processed', 'Your meeting has been processed successfully.', [])
+      } catch (err) {
+        console.error('Slack notification failed:', err)
+      }
+    }
 
     return c.json({
       status: 'complete',
-      utterances: result.utterances,
-      speakers: result.speakers,
-      talk_time: result.talkTime,
-      confidence: result.confidence,
+      utterances,
+      speakers,
+      confidence,
+      talk_time: talkTime,
     })
-  } catch (err: any) {
-    await releaseJobSlot(c.env)
-    return c.json({ error: err.message || 'Transcription failed' }, 500)
+  } catch (error: any) {
+    return c.json({
+      error: 'Status check failed',
+      message: error?.message || String(error),
+    }, 500)
   }
 })
 
