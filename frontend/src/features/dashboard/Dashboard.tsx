@@ -4,6 +4,7 @@ import { PatternDashboard } from './PatternDashboard'
 import { UnresolvedThreads } from './UnresolvedThreads'
 import { MeetingHistory } from './MeetingHistory'
 import { UsageStats } from './UsageStats'
+import { HeroMetrics } from './HeroMetrics'
 
 export function Dashboard() {
   const { user } = useAuth()
@@ -53,7 +54,7 @@ export function Dashboard() {
       </div>
 
       {/* USAGE STATS ROW */}
-      <UsageStats />
+      <HeroMetrics />
 
       {/* MAIN GRID: Tasks + Recent Meetings */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">

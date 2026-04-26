@@ -13,6 +13,7 @@ import paymentsRoutes from './routes/payments'
 import webhookRoutes from './routes/webhooks'
 import intelligenceRoutes from './routes/intelligence'
 import usageRoutes from './routes/usage'  // ← NEW
+import dashboardRoutes from './routes/dashboard'
 
 const app = new Hono()
 
@@ -33,5 +34,6 @@ app.route('/api/payments', paymentsRoutes)
 app.route('/api/payments', webhookRoutes)
 app.route('/api/intelligence', intelligenceRoutes)
 app.route('/api/usage', usageRoutes)  // ← NEW
+app.route('/api/dashboard', dashboardRoutes)
 
 export default app
