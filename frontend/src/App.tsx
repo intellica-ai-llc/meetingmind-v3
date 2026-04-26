@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+\import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { AppProvider } from '@/contexts/AppContext'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
@@ -11,6 +11,7 @@ import { RefundPolicy } from '@/pages/RefundPolicy'
 import { TermsOfService } from '@/pages/TermsOfService'
 import { PrivacyPolicy } from '@/pages/PrivacyPolicy'
 import { Contact } from '@/pages/Contact'
+import { Shell } from '@/components/layout/Shell' // ← NEW
 import './styles/globals.css'
 
 function App() {
@@ -22,12 +23,18 @@ function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/app" element={<ProtectedRoute><div className="min-h-screen bg-meetingmind-bg p-4"><AppPanel /></div></ProtectedRoute>} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/contact" element={<Contact />} />
+            {/* All other authenticated pages use the Shell */}
+            <Route path="/dashboard" element={<ProtectedRoute><Shell><Dashboard /></Shell></ProtectedRoute>} />
+            <Route path="/meetings" element={<ProtectedRoute><Shell><div>Meetings (coming soon)</div></Shell></ProtectedRoute>} />
+            <Route path="/tasks" element={<ProtectedRoute><Shell><div>Tasks (coming soon)</div></Shell></ProtectedRoute>} />
+            <Route path="/patterns" element={<ProtectedRoute><Shell><div>Patterns (coming soon)</div></Shell></ProtectedRoute>} />
+            <Route path="/coaching" element={<ProtectedRoute><Shell><div>Coaching (coming soon)</div></Shell></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Shell><div>Settings (coming soon)</div></Shell></ProtectedRoute>} />
           </Routes>
         </AppProvider>
       </AuthProvider>
