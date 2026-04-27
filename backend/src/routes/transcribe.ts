@@ -51,7 +51,7 @@ app.post('/transcribe', async (c) => {
       }, 429)
     }
 
-    // 3. Parse audio file
+    // 3. Parse audio file and optional keyterms
     const formData = await c.req.formData()
     const audioFile = formData.get('audio') as File
     if (!audioFile) {
@@ -59,24 +59,37 @@ app.post('/transcribe', async (c) => {
       return c.json({ error: 'No audio file provided' }, 400)
     }
 
-    // 4. Submit to AssemblyAI — use Blob, not Buffer
+    // Optional keyterms – a comma-separated or JSON string of important words (e.g., attendee names)
+    const keytermsRaw = formData.get('keyterms')
+    let keyterms: string[] | undefined
+    if (keytermsRaw && typeof keytermsRaw === 'string') {
+      try {
+        // Try parsing as JSON array
+        keyterms = JSON.parse(keytermsRaw)
+        if (!Array.isArray(keyterms)) keyterms = [keytermsRaw]
+      } catch {
+        // Fallback: treat as comma-separated
+        keyterms = keytermsRaw.split(',').map(k => k.trim()).filter(k => k.length)
+      }
+    }
+
+    // 4. Submit to AssemblyAI
     const blob = new Blob([await audioFile.arrayBuffer()], { type: audioFile.type || 'audio/webm' })
     const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
     const transcript = await client.transcripts.submit({
       audio: blob,
       speaker_labels: true,
-      speech_models: ['universal'],   // ← FIXED: deprecated speech_model → speech_models (array)
+      speech_models: ['universal'],
       punctuate: true,
       format_text: true,
+      ...(keyterms && keyterms.length ? { keyterms } : {}),
     })
 
     // 5. Return job_id immediately
     return c.json({ job_id: transcript.id })
   } catch (error: any) {
-    // Release slot on error (best-effort)
     try { await releaseJobSlot(c.env) } catch {}
 
-    // Return the actual error details so we can see what failed
     return c.json({
       error: 'Transcription failed',
       message: error?.message || String(error),
