@@ -17,6 +17,7 @@ import dashboardRoutes from './routes/dashboard'
 import calendarRoutes from './routes/calendar'
 import slackRoutes from './routes/slack'
 import initiativesRoutes from './routes/initiatives'
+import coachRoutes from './routes/coach'
 
 const app = new Hono()
 
@@ -41,5 +42,6 @@ app.route('/api/dashboard', dashboardRoutes)
 app.route('/api/calendar', calendarRoutes)
 app.route('/api/slack', slackRoutes)
 app.route('/api/initiatives', initiativesRoutes)
+app.route('/api', coachRoutes)
 
 export default app

@@ -17,6 +17,7 @@ import { MeetingsPage } from '@/pages/MeetingsPage'
 import { MeetingDetailPage } from '@/pages/MeetingDetailPage'
 import './styles/globals.css'
 import { TasksPage } from '@/pages/TasksPage'
+import { CoachingPage } from '@/pages/CoachingPage'
 
 function App() {
   return (
@@ -39,7 +40,7 @@ function App() {
             <Route path="/meetings/:id" element={<ProtectedRoute><Shell><MeetingDetailPage /></Shell></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute><Shell><TasksPage /></Shell></ProtectedRoute>} />
             <Route path="/patterns" element={<ProtectedRoute><Shell><div>Patterns (coming soon)</div></Shell></ProtectedRoute>} />
-            <Route path="/coaching" element={<ProtectedRoute><Shell><div>Coaching (coming soon)</div></Shell></ProtectedRoute>} />
+            <Route path="/coaching" element={<ProtectedRoute><Shell><CoachingPage /></Shell></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Shell><Settings /></Shell></ProtectedRoute>} />
           </Routes>
         </AppProvider>
