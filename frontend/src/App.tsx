@@ -16,6 +16,7 @@ import { Settings } from '@/pages/Settings'
 import { MeetingsPage } from '@/pages/MeetingsPage'
 import { MeetingDetailPage } from '@/pages/MeetingDetailPage'
 import './styles/globals.css'
+import { TasksPage } from '@/pages/TasksPage'
 
 function App() {
   return (
@@ -36,7 +37,7 @@ function App() {
             <Route path="/dashboard" element={<ProtectedRoute><Shell><Dashboard /></Shell></ProtectedRoute>} />
             <Route path="/meetings" element={<ProtectedRoute><Shell><MeetingsPage /></Shell></ProtectedRoute>} />
             <Route path="/meetings/:id" element={<ProtectedRoute><Shell><MeetingDetailPage /></Shell></ProtectedRoute>} />
-            <Route path="/tasks" element={<ProtectedRoute><Shell><div>Tasks (coming soon)</div></Shell></ProtectedRoute>} />
+            <Route path="/tasks" element={<ProtectedRoute><Shell><TasksPage /></Shell></ProtectedRoute>} />
             <Route path="/patterns" element={<ProtectedRoute><Shell><div>Patterns (coming soon)</div></Shell></ProtectedRoute>} />
             <Route path="/coaching" element={<ProtectedRoute><Shell><div>Coaching (coming soon)</div></Shell></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Shell><Settings /></Shell></ProtectedRoute>} />

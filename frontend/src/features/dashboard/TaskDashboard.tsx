@@ -32,15 +32,6 @@ export function TaskDashboard() {
     }
   }
 
-  const handleComplete = async (taskId: string) => {
-    try {
-      await api.put(`/tasks/${taskId}/complete`)
-      fetchTasks()
-    } catch (error) {
-      console.error('Failed to complete task:', error)
-    }
-  }
-
   useEffect(() => {
     fetchTasks()
   }, [])
@@ -74,7 +65,6 @@ export function TaskDashboard() {
     return diffDays > 7
   })
 
-  // Loading skeleton
   if (loading) {
     return (
       <Card variant="glass" padding="md">
@@ -104,7 +94,6 @@ export function TaskDashboard() {
     )
   }
 
-  // Empty state
   if (tasks.length === 0) {
     return (
       <Card variant="glass" padding="lg">
@@ -136,7 +125,6 @@ export function TaskDashboard() {
 
   return (
     <Card variant="glass" padding="md">
-      {/* Header + Tabs */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h3 style={{ fontSize: 'var(--mm-fs-section)', fontWeight: 700, color: 'var(--mm-text-primary)', margin: 0 }}>
           My Tasks
@@ -177,7 +165,6 @@ export function TaskDashboard() {
         </div>
       </div>
 
-      {/* Task list */}
       {filteredTasks.length === 0 ? (
         <p style={{ textAlign: 'center', color: 'var(--mm-text-secondary)', padding: '24px 0', fontSize: 14 }}>
           {filter === 'completed' ? 'No completed tasks yet.' : 'All tasks are done! 🎉'}
@@ -190,7 +177,7 @@ export function TaskDashboard() {
                 Overdue ({overdueTasks.length})
               </div>
               {overdueTasks.map((task) => (
-                <TaskCard key={task.id} task={task} onComplete={handleComplete} />
+                <TaskCard key={task.id} task={task} onUpdate={fetchTasks} />
               ))}
             </div>
           )}
@@ -201,7 +188,7 @@ export function TaskDashboard() {
                 Due This Week ({dueSoonTasks.length})
               </div>
               {dueSoonTasks.map((task) => (
-                <TaskCard key={task.id} task={task} onComplete={handleComplete} />
+                <TaskCard key={task.id} task={task} onUpdate={fetchTasks} />
               ))}
             </div>
           )}
@@ -212,7 +199,7 @@ export function TaskDashboard() {
                 Later ({otherTasks.length})
               </div>
               {otherTasks.map((task) => (
-                <TaskCard key={task.id} task={task} onComplete={handleComplete} />
+                <TaskCard key={task.id} task={task} onUpdate={fetchTasks} />
               ))}
             </div>
           )}
