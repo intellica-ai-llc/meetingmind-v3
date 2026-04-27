@@ -52,6 +52,7 @@ interface AppContextType {
   regenLoading: boolean; setRegenLoading: (loading: boolean) => void
   fileError: string; setFileError: (error: string) => void
   demoMode: boolean; setDemoMode: (mode: boolean) => void
+  savedMeetingId: string | null; setSavedMeetingId: (id: string | null) => void   // ← NEW
   reset: () => void
   handleStartMeeting: () => void
   handleStopRecording: () => void
@@ -93,6 +94,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [regenLoading, setRegenLoading] = useState(false)
   const [fileError, setFileError] = useState('')
   const [demoMode, setDemoMode] = useState(false)
+  const [savedMeetingId, setSavedMeetingId] = useState<string | null>(null)   // ← NEW
 
   // ── Refs ─────────────────────────────────────────────────
   const pollRef = useRef<number | null>(null)
@@ -127,6 +129,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMeetingDate(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))
     setFileError('')
     setDemoMode(false)
+    setSavedMeetingId(null)   // ← NEW
   }
 
   // ── Recording timer ──────────────────────────────────────
@@ -216,7 +219,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const totalMs = utts.reduce((sum: number, u: any) => sum + (u.duration_ms || 0), 0)
         const durationMinutes = Math.round(totalMs / 60000)
-        await api.post('/meetings', {
+        const saveRes = await api.post('/meetings', {
           title: meetingTitle || 'Untitled Meeting',
           meeting_date: meetingDate,
           duration_minutes: durationMinutes || null,
@@ -235,6 +238,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           risk_flags: r2.data.risk_flags || [],
           meeting_type: r2.data.meeting_type || null,
         })
+        if (saveRes.data?.meeting?.id) {
+          setSavedMeetingId(saveRes.data.meeting.id)
+        }
       } catch (saveErr) {
         console.error('Failed to save meeting to database:', saveErr)
       }
@@ -454,6 +460,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       regenLoading, setRegenLoading,
       fileError, setFileError,
       demoMode, setDemoMode,
+      savedMeetingId, setSavedMeetingId,   // ← NEW
       reset,
       handleStartMeeting,
       handleStopRecording,

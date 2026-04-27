@@ -11,9 +11,11 @@ import { RefundPolicy } from '@/pages/RefundPolicy'
 import { TermsOfService } from '@/pages/TermsOfService'
 import { PrivacyPolicy } from '@/pages/PrivacyPolicy'
 import { Contact } from '@/pages/Contact'
-import { Shell } from '@/components/layout/Shell' // ← NEW
-import './styles/globals.css'
+import { Shell } from '@/components/layout/Shell'
 import { Settings } from '@/pages/Settings'
+import { MeetingsPage } from '@/pages/MeetingsPage'
+import { MeetingDetailPage } from '@/pages/MeetingDetailPage'
+import './styles/globals.css'
 
 function App() {
   return (
@@ -29,9 +31,11 @@ function App() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/contact" element={<Contact />} />
-            {/* All other authenticated pages use the Shell */}
+
+            {/* Authenticated pages with Shell */}
             <Route path="/dashboard" element={<ProtectedRoute><Shell><Dashboard /></Shell></ProtectedRoute>} />
-            <Route path="/meetings" element={<ProtectedRoute><Shell><div>Meetings (coming soon)</div></Shell></ProtectedRoute>} />
+            <Route path="/meetings" element={<ProtectedRoute><Shell><MeetingsPage /></Shell></ProtectedRoute>} />
+            <Route path="/meetings/:id" element={<ProtectedRoute><Shell><MeetingDetailPage /></Shell></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute><Shell><div>Tasks (coming soon)</div></Shell></ProtectedRoute>} />
             <Route path="/patterns" element={<ProtectedRoute><Shell><div>Patterns (coming soon)</div></Shell></ProtectedRoute>} />
             <Route path="/coaching" element={<ProtectedRoute><Shell><div>Coaching (coming soon)</div></Shell></ProtectedRoute>} />

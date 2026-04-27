@@ -50,7 +50,7 @@ app.get('/:id', async (c) => {
   return c.json({ meeting: data })
 })
 
-// ── Create meeting (NEW) ────────────────────────────────────
+// ── Create meeting ──────────────────────────────────────────
 app.post('/', async (c) => {
   const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
@@ -75,6 +75,7 @@ app.post('/', async (c) => {
     next_agenda: body.next_agenda || [],
     risk_flags: body.risk_flags || [],
     meeting_type: body.meeting_type || null,
+    discarded: body.discarded || false,
   }
 
   const { data, error } = await supabase
@@ -85,6 +86,65 @@ app.post('/', async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json({ meeting: data })
+})
+
+// ── Update meeting (NEW) ────────────────────────────────────
+app.put('/:id', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
+  const user = c.get('user')
+  const id = c.req.param('id')
+  const body = await c.req.json()
+
+  // Verify ownership
+  const { data: existing, error: fetchErr } = await supabase
+    .from('meetings')
+    .select('id, user_id')
+    .eq('id', id)
+    .single()
+  if (fetchErr || existing.user_id !== user.id) {
+    return c.json({ error: 'Meeting not found' }, 404)
+  }
+
+  // Map allowed fields (same mapping as create)
+  const allowedFields: Record<string, string> = {
+    title: 'title',
+    meeting_date: 'meeting_date',
+    duration_minutes: 'duration_minutes',
+    summary: 'summary',
+    decisions: 'decisions',
+    action_items: 'action_items',
+    open_questions: 'open_questions',
+    parking_lot: 'parking_lot',
+    key_topics: 'key_topics',
+    key_quotes: 'key_quotes',
+    sentiment: 'sentiment',
+    sentiment_reason: 'sentiment_reason',
+    effectiveness_score: 'effectiveness_score',
+    effectiveness_reason: 'effectiveness_reason',
+    next_agenda: 'next_agenda',
+    risk_flags: 'risk_flags',
+    meeting_type: 'meeting_type',
+    discarded: 'discarded',
+  }
+
+  const updates: Record<string, any> = {}
+  for (const [jsonKey, dbKey] of Object.entries(allowedFields)) {
+    if (body[jsonKey] !== undefined) {
+      updates[dbKey] = body[jsonKey]
+    }
+  }
+
+  if (Object.keys(updates).length === 0) {
+    return c.json({ error: 'No valid fields to update' }, 400)
+  }
+
+  const { error } = await supabase
+    .from('meetings')
+    .update(updates)
+    .eq('id', id)
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json({ success: true, ...updates })
 })
 
 // ── Delete meeting ──────────────────────────────────────────

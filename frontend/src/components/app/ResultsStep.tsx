@@ -10,11 +10,44 @@ import { CoachCard } from '@/components/results/CoachCard'
 import { EmailCard } from '@/components/results/EmailCard'
 import { TranscriptViewer } from '@/components/results/TranscriptViewer'
 import { ActionButtons } from '@/components/results/ActionButtons'
+import { api } from '@/lib/api'
+import { Link } from 'react-router-dom'
 
 const TALK_COLORS = ['#00d4ff', '#7c3aed', '#00e676', '#f59e0b']
 
 export function ResultsStep() {
-  const { meetingTitle, meetingDate, demoMode, results, talkTime, speakerMap, coachData, email, namedTranscript } = useApp()
+  const {
+    meetingTitle,
+    meetingDate,
+    demoMode,
+    results,
+    talkTime,
+    speakerMap,
+    coachData,
+    email,
+    namedTranscript,
+    savedMeetingId,
+    setSavedMeetingId,
+  } = useApp()
+
+  const handleKeep = async () => {
+    if (!savedMeetingId) return
+    try {
+      await api.put(`/meetings/${savedMeetingId}`, { discarded: false })
+    } catch (e) {
+      console.error('Keep meeting failed:', e)
+    }
+  }
+
+  const handleDiscard = async () => {
+    if (!savedMeetingId) return
+    try {
+      await api.put(`/meetings/${savedMeetingId}`, { discarded: true })
+      setSavedMeetingId(null)
+    } catch (e) {
+      console.error('Discard meeting failed:', e)
+    }
+  }
 
   return (
     <div>
@@ -64,6 +97,57 @@ export function ResultsStep() {
       <EmailCard email={email} />
       <TranscriptViewer transcript={namedTranscript} />
       <ActionButtons />
+
+      {/* ── Post‑Analysis Actions ───────────────────────────── */}
+      {savedMeetingId && (
+        <div style={{ marginTop: 24, padding: 16, background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,212,255,0.15)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <button
+            onClick={handleKeep}
+            style={{
+              padding: '8px 18px',
+              borderRadius: 8,
+              background: 'rgba(0,230,118,0.15)',
+              color: '#00e676',
+              border: '1px solid rgba(0,230,118,0.35)',
+              fontWeight: 600,
+              fontSize: 13,
+              cursor: 'pointer',
+            }}
+          >
+            ✓ Keep Meeting
+          </button>
+          <button
+            onClick={handleDiscard}
+            style={{
+              padding: '8px 18px',
+              borderRadius: 8,
+              background: 'rgba(255,77,77,0.15)',
+              color: '#ff4d4d',
+              border: '1px solid rgba(255,77,77,0.35)',
+              fontWeight: 600,
+              fontSize: 13,
+              cursor: 'pointer',
+            }}
+          >
+            ✕ Discard Meeting
+          </button>
+          <Link
+            to={`/meetings/${savedMeetingId}`}
+            style={{
+              padding: '8px 18px',
+              borderRadius: 8,
+              background: 'rgba(0,212,255,0.1)',
+              color: '#00d4ff',
+              border: '1px solid rgba(0,212,255,0.35)',
+              fontWeight: 600,
+              fontSize: 13,
+              textDecoration: 'none',
+            }}
+          >
+            View Saved Meeting →
+          </Link>
+        </div>
+      )}
     </div>
   )
 }
