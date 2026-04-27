@@ -1,10 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext'
-import { TaskDashboard } from './TaskDashboard'
-import { UnresolvedThreads } from './UnresolvedThreads'
-import { MeetingHistory } from './MeetingHistory'
 import { HeroMetrics } from './HeroMetrics'
 import { CoachPanel } from './CoachPanel'
-import { IntelligencePanel } from './IntelligencePanel'
+import { InitiativeGrid } from './InitiativeGrid'
+import { AttentionFeed } from './AttentionFeed'
 
 export function Dashboard() {
   const { user } = useAuth()
@@ -22,50 +20,29 @@ export function Dashboard() {
   return (
     <div>
       {/* PAGE HEADER */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 24,
-        }}
-      >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h2
-            style={{
-              fontSize: 'var(--mm-fs-title)',
-              fontWeight: 800,
-              color: 'var(--mm-text-primary)',
-              margin: 0,
-            }}
-          >
+          <h2 style={{ fontSize: 'var(--mm-fs-title)', fontWeight: 800, color: 'var(--mm-text-primary)', margin: 0 }}>
             {getGreeting()}, {displayName}
           </h2>
-          <p
-            style={{
-              fontSize: 'var(--mm-fs-body)',
-              color: 'var(--mm-text-secondary)',
-              margin: '4px 0 0',
-            }}
-          >
-            Here’s everything from your meetings — ready when you are.
+          <p style={{ fontSize: 'var(--mm-fs-body)', color: 'var(--mm-text-secondary)', margin: '4px 0 0' }}>
+            Here’s your organisational intelligence at a glance.
           </p>
         </div>
       </div>
 
-      {/* HERO METRICS ROW */}
+      {/* QUICK STATS */}
       <HeroMetrics />
 
-      {/* MAIN GRID: Tasks + Recent Meetings */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-        <TaskDashboard />
-        <MeetingHistory />
+      {/* INITIATIVES GRID */}
+      <div style={{ marginTop: 20 }}>
+        <h3 style={{ fontSize: 'var(--mm-fs-card-title)', color: 'var(--mm-text-primary)', marginBottom: 12 }}>Initiatives</h3>
+        <InitiativeGrid />
       </div>
 
-      {/* BOTTOM ROW: Patterns + Threads + Coach */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
-        <IntelligencePanel />
-        <UnresolvedThreads />
+      {/* MAIN GRID: Attention Feed + Coach */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+        <AttentionFeed />
         <CoachPanel />
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 
 // Icons — lightweight inline SVGs to avoid extra dependencies
 const Icon = ({ d, active = false }: { d: string; active?: boolean }) => (
@@ -168,6 +169,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
+
+        {/* BREADCRUMBS */}
+        <Breadcrumbs />
 
         {/* PAGE CONTENT */}
         <main style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
