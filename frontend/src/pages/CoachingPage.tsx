@@ -5,10 +5,20 @@ import { Card } from '@/components/ui/Card'
 import { TrendChart } from '@/components/ui/TrendChart'
 import { ScoreRing } from '@/components/ui/ScoreRing'
 
+interface TypeBreakdown {
+  meeting_type: string
+  meetings_count: number
+  avg_score: number | null
+  avg_duration: number | null
+  avg_decisions: number | null
+  trend: string
+}
+
 export function CoachingPage() {
   const { isPaid } = useSubscription()
   const [trends, setTrends] = useState<any[]>([])
   const [patterns, setPatterns] = useState<any>(null)
+  const [breakdown, setBreakdown] = useState<TypeBreakdown[]>([])
   const [question, setQuestion] = useState('')
   const [answer, setAnswer] = useState('')
   const [asking, setAsking] = useState(false)
@@ -21,10 +31,12 @@ export function CoachingPage() {
     }
     Promise.all([
       api.get('/coach/trends').catch(() => ({ data: { trends: [] } })),
-      api.get('/intelligence/patterns').catch(() => ({ data: { patterns: null } }))
-    ]).then(([trendsRes, patternsRes]) => {
+      api.get('/intelligence/patterns').catch(() => ({ data: { patterns: null } })),
+      api.get('/coach/breakdown').catch(() => ({ data: { breakdown: [] } })),
+    ]).then(([trendsRes, patternsRes, breakdownRes]) => {
       setTrends(trendsRes.data.trends || [])
       setPatterns(patternsRes.data.patterns || null)
+      setBreakdown(breakdownRes.data.breakdown || [])
     }).finally(() => setLoading(false))
   }, [isPaid])
 
@@ -97,6 +109,45 @@ export function CoachingPage() {
         </Card>
       </div>
 
+      {/* ── Meeting Type Breakdown (NEW) ── */}
+      {breakdown.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <Card variant="glass" padding="lg">
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--mm-text-primary)', marginBottom: 12 }}>
+              Meeting Type Breakdown
+            </h3>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    <th style={thStyle}>Type</th>
+                    <th style={thStyle}>Meetings</th>
+                    <th style={thStyle}>Avg Score</th>
+                    <th style={thStyle}>Avg Duration</th>
+                    <th style={thStyle}>Avg Decisions</th>
+                    <th style={thStyle}>Trend</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {breakdown.map(row => (
+                    <tr key={row.meeting_type} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={tdStyle}>{row.meeting_type}</td>
+                      <td style={tdStyle}>{row.meetings_count}</td>
+                      <td style={tdStyle}>{row.avg_score !== null ? `${row.avg_score}/10` : '—'}</td>
+                      <td style={tdStyle}>{row.avg_duration !== null ? `${row.avg_duration} min` : '—'}</td>
+                      <td style={tdStyle}>{row.avg_decisions !== null ? row.avg_decisions : '—'}</td>
+                      <td style={{ ...tdStyle, fontWeight: 700, color: row.trend === '↑' ? '#00e676' : row.trend === '↓' ? '#ff4d4d' : 'var(--mm-text-secondary)' }}>
+                        {row.trend}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      )}
+
       <div style={{ marginBottom: 20 }}>
         <Card variant="glass" padding="lg">
           <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--mm-text-primary)', marginBottom: 12 }}>
@@ -134,4 +185,19 @@ export function CoachingPage() {
       </div>
     </div>
   )
+}
+
+const thStyle: React.CSSProperties = {
+  textAlign: 'left',
+  padding: '8px 12px',
+  color: 'var(--mm-text-secondary)',
+  fontWeight: 600,
+  fontSize: 11,
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+}
+
+const tdStyle: React.CSSProperties = {
+  padding: '8px 12px',
+  color: 'var(--mm-text-primary)',
 }

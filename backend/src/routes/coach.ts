@@ -139,4 +139,69 @@ Answer in a clear, direct paragraph. Return ONLY the answer text, no JSON.`
   return c.json({ answer })
 })
 
+// ── Meeting Type Breakdown ────────────────────────────────
+app.get('/coach/breakdown', requirePlan('pro'), async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
+  const user = c.get('user')
+
+  // Fetch last 30 meetings (enough to group by type)
+  const { data: meetings } = await supabase
+    .from('meetings')
+    .select('meeting_type, effectiveness_score, duration_minutes, decisions, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(30)
+
+  if (!meetings || meetings.length === 0) return c.json({ breakdown: [] })
+
+  // Group by meeting_type
+  const groups: Record<string, any[]> = {}
+  for (const m of meetings) {
+    const type = m.meeting_type || 'Other'
+    if (!groups[type]) groups[type] = []
+    groups[type].push(m)
+  }
+
+  const breakdown = Object.entries(groups).map(([type, items]) => {
+    const scores = items.filter(m => m.effectiveness_score != null).map(m => m.effectiveness_score)
+    const avgScore = scores.length
+      ? Math.round((scores.reduce((a,b) => a+b, 0) / scores.length) * 10) / 10
+      : null
+
+    const durations = items.filter(m => m.duration_minutes != null).map(m => m.duration_minutes)
+    const avgDuration = durations.length
+      ? Math.round(durations.reduce((a,b) => a+b, 0) / durations.length)
+      : null
+
+    const totalDecisions = items.reduce((sum, m) => sum + (m.decisions?.length || 0), 0)
+    const avgDecisions = items.length ? Math.round((totalDecisions / items.length) * 10) / 10 : null
+
+    // Trend: compare last 3 vs previous 3 (if enough meetings of this type)
+    const sorted = [...items].sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    const last3 = sorted.slice(0,3).filter(m => m.effectiveness_score != null).map(m => m.effectiveness_score)
+    const prev3 = sorted.slice(3,6).filter(m => m.effectiveness_score != null).map(m => m.effectiveness_score)
+    const avgLast3 = last3.length ? last3.reduce((a,b) => a+b, 0) / last3.length : null
+    const avgPrev3 = prev3.length ? prev3.reduce((a,b) => a+b, 0) / prev3.length : null
+    let trend: string = '→'
+    if (avgLast3 !== null && avgPrev3 !== null) {
+      if (avgLast3 > avgPrev3) trend = '↑'
+      else if (avgLast3 < avgPrev3) trend = '↓'
+    }
+
+    return {
+      meeting_type: type,
+      meetings_count: items.length,
+      avg_score: avgScore,
+      avg_duration: avgDuration,
+      avg_decisions: avgDecisions,
+      trend,
+    }
+  })
+
+  // Sort by count desc
+  breakdown.sort((a,b) => b.meetings_count - a.meetings_count)
+
+  return c.json({ breakdown })
+})
+
 export default app
