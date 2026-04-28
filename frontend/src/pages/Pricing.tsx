@@ -17,7 +17,7 @@ export function Pricing() {
       const response = await api.post('/payments/create-checkout-session', {
         priceId,
         planType,
-        successUrl: `${window.location.origin}/dashboard?upgrade=${planType}&success=true`,
+        successUrl: `${window.location.origin}/post-checkout?plan=${planType}`,
         cancelUrl: `${window.location.origin}/pricing`,
       })
       window.location.href = response.data.url

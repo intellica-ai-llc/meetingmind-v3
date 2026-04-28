@@ -23,6 +23,7 @@ import { SpeakerProfileManager } from '@/pages/SpeakerProfileManager'
 import { InitiativeDetailPage } from '@/pages/InitiativeDetailPage'
 import { InitiativesPage } from '@/pages/InitiativesPage'
 import { Pricing } from '@/pages/Pricing'
+import { PostCheckoutPage } from '@/pages/PostCheckoutPage'
 import './styles/globals.css'
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/post-checkout" element={<ProtectedRoute><PostCheckoutPage /></ProtectedRoute>} />
 
               {/* Authenticated pages with Shell */}
               <Route path="/dashboard" element={<ProtectedRoute><Shell><Dashboard /></Shell></ProtectedRoute>} />

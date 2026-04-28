@@ -20,6 +20,7 @@ import initiativesRoutes from './routes/initiatives'
 import coachRoutes from './routes/coach'
 import alertPreferencesRoutes from './routes/alert-preferences'
 import speakerProfilesRoutes from './routes/speaker-profiles'
+import verifyPurchaseRoutes from './routes/verify-purchase'
 
 const app = new Hono()
 
@@ -47,5 +48,6 @@ app.route('/api/alert-preferences', alertPreferencesRoutes)
 app.route('/api/speaker-profiles', speakerProfilesRoutes)
 app.route('/api/initiatives', initiativesRoutes)
 app.route('/api', coachRoutes)
+app.route('/api/payments', verifyPurchaseRoutes)
 
 export default app

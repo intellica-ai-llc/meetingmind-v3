@@ -34,7 +34,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       const res = await api.post('/payments/create-checkout-session', {
         priceId,
         planType: 'pro',
-        successUrl: window.location.origin + '/dashboard?upgrade=pro&success=true',
+        successUrl: window.location.origin + '/post-checkout?plan=pro',
         cancelUrl: window.location.origin + '/pricing',
       })
       window.location.href = res.data.url

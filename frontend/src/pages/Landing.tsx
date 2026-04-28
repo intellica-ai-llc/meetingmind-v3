@@ -24,7 +24,7 @@ export function Landing() {
         body: JSON.stringify({
           priceId,
           planType,
-          successUrl: window.location.origin + '/dashboard?upgrade=' + planType + '&success=true',
+          successUrl: window.location.origin + '/post-checkout?plan=' + planType,
           cancelUrl: window.location.origin + '/pricing'
         })
       })
