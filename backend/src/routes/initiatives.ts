@@ -34,7 +34,7 @@ app.post('/', requirePlan('pro'), async (c) => {
   return c.json({ initiative: data })
 })
 
-// ── Get single initiative with linked items ────────────────
+// ── Get single initiative with linked items (UPDATED – includes membership IDs) ──
 app.get('/:id', async (c) => {
   const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const user = c.get('user')
@@ -48,10 +48,10 @@ app.get('/:id', async (c) => {
     .single()
   if (error) return c.json({ error: 'Initiative not found' }, 404)
 
-  // Fetch linked meetings, tasks, threads via memberships
+  // Fetch memberships
   const { data: members } = await supabase
     .from('initiative_memberships')
-    .select('meeting_id, task_id, thread_id')
+    .select('id, meeting_id, task_id, thread_id')
     .eq('initiative_id', id)
 
   const meetingIds = members?.filter(m => m.meeting_id).map(m => m.meeting_id) || []
@@ -64,15 +64,24 @@ app.get('/:id', async (c) => {
 
   if (meetingIds.length) {
     const { data: meetings } = await supabase.from('meetings').select('*').in('id', meetingIds)
-    linkedMeetings = meetings || []
+    linkedMeetings = (meetings || []).map(m => {
+      const memb = members?.find(mb => mb.meeting_id === m.id)
+      return { ...m, membership_id: memb?.id }
+    })
   }
   if (taskIds.length) {
     const { data: tasks } = await supabase.from('tasks').select('*').in('id', taskIds)
-    linkedTasks = tasks || []
+    linkedTasks = (tasks || []).map(t => {
+      const memb = members?.find(mb => mb.task_id === t.id)
+      return { ...t, membership_id: memb?.id }
+    })
   }
   if (threadIds.length) {
     const { data: threads } = await supabase.from('unresolved_threads').select('*').in('id', threadIds)
-    linkedThreads = threads || []
+    linkedThreads = (threads || []).map(th => {
+      const memb = members?.find(mb => mb.thread_id === th.id)
+      return { ...th, membership_id: memb?.id }
+    })
   }
 
   return c.json({ initiative, linkedMeetings, linkedTasks, linkedThreads })
@@ -85,7 +94,6 @@ app.put('/:id', requirePlan('pro'), async (c) => {
   const id = c.req.param('id')
   const body = await c.req.json()
 
-  // Verify ownership
   const { data: existing, error: fetchErr } = await supabase
     .from('initiatives')
     .select('id, user_id')
@@ -135,7 +143,6 @@ app.post('/:id/members', requirePlan('pro'), async (c) => {
   const initiativeId = c.req.param('id')
   const { meeting_id, task_id, thread_id } = await c.req.json()
 
-  // Verify initiative belongs to user
   const { data: initiative } = await supabase
     .from('initiatives')
     .select('id, user_id')
@@ -144,7 +151,6 @@ app.post('/:id/members', requirePlan('pro'), async (c) => {
     .single()
   if (!initiative) return c.json({ error: 'Initiative not found' }, 404)
 
-  // Verify the linked item also belongs to user
   if (meeting_id) {
     const { data: meet } = await supabase.from('meetings').select('id').eq('id', meeting_id).eq('user_id', user.id).single()
     if (!meet) return c.json({ error: 'Meeting not found or not yours' }, 404)
@@ -174,7 +180,6 @@ app.delete('/:id/members/:memberId', requirePlan('pro'), async (c) => {
   const initiativeId = c.req.param('id')
   const memberId = c.req.param('memberId')
 
-  // Confirm membership belongs to initiative owned by user
   const { data: membership } = await supabase
     .from('initiative_memberships')
     .select('id, initiative_id')
@@ -183,7 +188,6 @@ app.delete('/:id/members/:memberId', requirePlan('pro'), async (c) => {
     .single()
   if (!membership) return c.json({ error: 'Membership not found' }, 404)
 
-  // Verify initiative ownership
   const { data: initiative } = await supabase
     .from('initiatives')
     .select('id, user_id')
@@ -206,7 +210,6 @@ app.get('/:id/health', async (c) => {
   const user = c.get('user')
   const initiativeId = c.req.param('id')
 
-  // Verify ownership
   const { data: initiative } = await supabase
     .from('initiatives')
     .select('id, user_id')
