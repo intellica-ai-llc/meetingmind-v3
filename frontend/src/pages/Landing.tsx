@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { AccessCodeModal } from '@/components/AccessCodeModal'
 
 export function Landing() {
   const { user } = useAuth()
+  const [showAccessModal, setShowAccessModal] = useState(false)
 
   const handlePurchase = async (priceId: string, planType: string) => {
     if (!user) {
@@ -446,6 +449,21 @@ export function Landing() {
             <a href="/terms" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>Terms of Service</a>
             <a href="/privacy" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>Privacy Policy</a>
             <a href="/contact" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', textDecoration: 'none' }}>Contact</a>
+            {user && (
+              <button
+                onClick={() => setShowAccessModal(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'rgba(255,255,255,0.25)',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+              >
+                Password Access
+              </button>
+            )}
           </div>
         </div>
       </footer>
@@ -458,6 +476,10 @@ export function Landing() {
         }
       `}</style>
 
+      {/* ── Access Code Modal ── */}
+      {showAccessModal && (
+        <AccessCodeModal onClose={() => setShowAccessModal(false)} />
+      )}
     </div>
   )
 }
