@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { usePlan } from '@/contexts/UserPlanProvider'
 import { api } from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 
@@ -8,6 +9,7 @@ export function PostCheckoutPage() {
   const plan = searchParams.get('plan') || 'pro'
   const [status, setStatus] = useState<'polling' | 'verifying' | 'success' | 'error'>('polling')
   const navigate = useNavigate()
+  const { refetch } = usePlan()
 
   useEffect(() => {
     if (status !== 'polling') return
@@ -20,12 +22,13 @@ export function PostCheckoutPage() {
         const res = await api.get('/payments/subscription')
         const sub = res.data.subscription
         if (sub?.status === 'active' && (sub?.tier === 'pro' || sub?.tier === 'business')) {
+          // Force‑refresh the plan context so all PlanGates see the new tier
+          await refetch()
           setStatus('success')
           setTimeout(() => navigate('/dashboard'), 2000)
           return
         }
       } catch (err: any) {
-        // If rate limited, try to verify immediately
         if (err?.response?.status === 429) {
           setStatus('verifying')
           verifyPurchase()
@@ -42,12 +45,13 @@ export function PostCheckoutPage() {
 
     const interval = setInterval(checkSubscription, 2000)
     return () => clearInterval(interval)
-  }, [status, navigate])
+  }, [status, navigate, refetch])
 
   const verifyPurchase = async () => {
     try {
       const res = await api.post('/payments/verify-purchase')
       if (res.data.status === 'active') {
+        await refetch()
         setStatus('success')
         setTimeout(() => navigate('/dashboard'), 2000)
       } else {
