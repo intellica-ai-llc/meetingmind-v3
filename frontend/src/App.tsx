@@ -18,6 +18,8 @@ import { MeetingsPage } from '@/pages/MeetingsPage'
 import { MeetingDetailPage } from '@/pages/MeetingDetailPage'
 import { TasksPage } from '@/pages/TasksPage'
 import { CoachingPage } from '@/pages/CoachingPage'
+import { AlertSettingsPage } from '@/pages/AlertSettingsPage'
+import { SpeakerProfileManager } from '@/pages/SpeakerProfileManager'
 import './styles/globals.css'
 
 function App() {
@@ -44,6 +46,8 @@ function App() {
               <Route path="/patterns" element={<ProtectedRoute><Shell><div>Patterns (coming soon)</div></Shell></ProtectedRoute>} />
               <Route path="/coaching" element={<ProtectedRoute><Shell><CoachingPage /></Shell></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Shell><Settings /></Shell></ProtectedRoute>} />
+              <Route path="/settings/alerts" element={<ProtectedRoute><Shell><AlertSettingsPage /></Shell></ProtectedRoute>} />
+              <Route path="/settings/speakers" element={<ProtectedRoute><Shell><SpeakerProfileManager /></Shell></ProtectedRoute>} />
             </Routes>
           </UserPlanProvider>
         </AppProvider>

@@ -59,14 +59,13 @@ export default {
         }
       }
 
-      // 2. Initiative health snapshots (NEW)
+      // 2. Initiative health snapshots
       const { data: allInitiatives } = await supabase
         .from('initiatives')
         .select('id, user_id')
 
       if (allInitiatives && allInitiatives.length) {
         for (const initiative of allInitiatives) {
-          // Fetch memberships for this initiative
           const { data: members } = await supabase
             .from('initiative_memberships')
             .select('meeting_id, task_id, thread_id')
@@ -120,12 +119,10 @@ export default {
             unresolvedThreads = count || 0
           }
 
-          // Determine health status
           let healthStatus = 'healthy'
           if (unresolvedThreads >= 5 || Object.keys(riskFreq).length >= 3) healthStatus = 'at_risk'
           if (unresolvedThreads >= 10 || Object.values(riskFreq).some(v => v >= 5)) healthStatus = 'critical'
 
-          // Upsert health snapshot
           await supabase.from('initiative_health_snapshots').upsert({
             initiative_id: initiative.id,
             avg_effectiveness: avgEffectiveness,
@@ -135,14 +132,21 @@ export default {
             snapshot_date: today,
           }, { onConflict: 'initiative_id, snapshot_date' })
 
-          // Update the initiative's health_status
           await supabase.from('initiatives').update({ health_status: healthStatus }).eq('id', initiative.id)
         }
       }
 
+      // 3. Alert preferences check (NEW)
+      const { runAlertService } = await import('../services/alert-service')
+      try {
+        await runAlertService(env)
+      } catch (err) {
+        console.error('Alert service error:', err)
+      }
+
       // Mark as processed
       await env.MEETING_JOBS.put(lastRunKey, today)
-      console.log('Intelligence engine run complete (patterns + initiative health).')
+      console.log('Intelligence engine run complete (patterns + initiative health + alerts).')
     }
   },
 }

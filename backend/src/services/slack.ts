@@ -73,3 +73,49 @@ export async function sendSlackSummary(env: any, userId: string, meetingTitle: s
     console.error('Slack send error:', err)
   }
 }
+
+export async function sendAlertNotification(env: any, userId: string, alertText: string) {
+  const { createClient } = await import('@supabase/supabase-js')
+  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('subscription_tier, subscription_status')
+    .eq('id', userId)
+    .single()
+
+  const tier = profile?.subscription_tier || 'free'
+  const isActive = profile?.subscription_status === 'active'
+  if (tier !== 'business' || !isActive) return
+
+  const { data: slackConfig } = await supabase
+    .from('slack_configs')
+    .select('channel_webhook_url')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (!slackConfig?.channel_webhook_url) return
+
+  const blocks = {
+    blocks: [
+      {
+        type: 'section',
+        text: { type: 'mrkdwn', text: `🔔 *MeetingMind Alerts*` },
+      },
+      {
+        type: 'section',
+        text: { type: 'mrkdwn', text: alertText },
+      },
+    ],
+  }
+
+  try {
+    await fetch(slackConfig.channel_webhook_url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(blocks),
+    })
+  } catch (err) {
+    console.error('Slack alert send error:', err)
+  }
+}

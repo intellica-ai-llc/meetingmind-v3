@@ -18,6 +18,8 @@ import calendarRoutes from './routes/calendar'
 import slackRoutes from './routes/slack'
 import initiativesRoutes from './routes/initiatives'
 import coachRoutes from './routes/coach'
+import alertPreferencesRoutes from './routes/alert-preferences'
+import speakerProfilesRoutes from './routes/speaker-profiles'
 
 const app = new Hono()
 
@@ -41,6 +43,8 @@ app.route('/api/usage', usageRoutes)  // ← NEW
 app.route('/api/dashboard', dashboardRoutes)
 app.route('/api/calendar', calendarRoutes)
 app.route('/api/slack', slackRoutes)
+app.route('/api/alert-preferences', alertPreferencesRoutes)
+app.route('/api/speaker-profiles', speakerProfilesRoutes)
 app.route('/api/initiatives', initiativesRoutes)
 app.route('/api', coachRoutes)
 

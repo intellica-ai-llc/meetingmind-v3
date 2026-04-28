@@ -198,6 +198,74 @@ export function Settings() {
           </span>
         )}
       </div>
+
+      {/* ── Alert Preferences Link ── */}
+      <div style={{
+        background: 'var(--mm-bg-secondary)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 12,
+        padding: 20,
+        marginBottom: 16,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <div>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--mm-text-primary)', margin: 0 }}>Alert Preferences</h3>
+          <p style={{ fontSize: 13, color: 'var(--mm-text-secondary)', margin: '4px 0 0' }}>
+            Configure when and how you get notified about risks, stale threads, and overdue tasks.
+          </p>
+        </div>
+        <button
+          onClick={() => window.location.href = '/settings/alerts'}
+          style={{
+            background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))',
+            border: 'none',
+            borderRadius: 8,
+            padding: '8px 16px',
+            color: '#fff',
+            fontWeight: 600,
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+        >
+          Configure
+        </button>
+      </div>
+
+      {/* ── Speaker Profiles Link ── */}
+      <div style={{
+        background: 'var(--mm-bg-secondary)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 12,
+        padding: 20,
+        marginBottom: 16,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <div>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--mm-text-primary)', margin: 0 }}>Speaker Profiles</h3>
+          <p style={{ fontSize: 13, color: 'var(--mm-text-secondary)', margin: '4px 0 0' }}>
+            Manage speaker identities and merge aliases across meetings for more accurate coaching.
+          </p>
+        </div>
+        <button
+          onClick={() => window.location.href = '/settings/speakers'}
+          style={{
+            background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))',
+            border: 'none',
+            borderRadius: 8,
+            padding: '8px 16px',
+            color: '#fff',
+            fontWeight: 600,
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+        >
+          Manage
+        </button>
+      </div>
     </div>
   )
 }
