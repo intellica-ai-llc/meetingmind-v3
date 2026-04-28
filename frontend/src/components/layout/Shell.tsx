@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { usePlan } from '@/contexts/UserPlanProvider'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
+import { api } from '@/lib/api'
 
 const Icon = ({ d, active = false }: { d: string; active?: boolean }) => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--mm-cyan)' : 'var(--mm-text-secondary)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -22,14 +24,33 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+  const { isPaid, plan } = usePlan()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const handleUpgrade = () => navigate('/pricing')
+  // Direct Stripe checkout – no intermediate page
+  const handleUpgrade = async () => {
+    const priceId = import.meta.env.VITE_STRIPE_PRICE_PRO
+    try {
+      const res = await api.post('/payments/create-checkout-session', {
+        priceId,
+        planType: 'pro',
+        successUrl: window.location.origin + '/dashboard?upgrade=pro&success=true',
+        cancelUrl: window.location.origin + '/pricing',
+      })
+      window.location.href = res.data.url
+    } catch (err) {
+      console.error('Checkout error:', err)
+    }
+  }
+
   const handleSignOut = async () => { await signOut(); navigate('/') }
 
   const email = user?.email ?? ''
   const displayName = email.split('@')[0]
   const initials = displayName.substring(0, 2).toUpperCase()
+
+  // Plan badge label
+  const planLabel = isPaid ? (plan === 'business' ? 'Business' : 'Pro') : 'Free'
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--mm-gradient-page)', fontFamily: 'var(--mm-font-body)', color: 'var(--mm-text-primary)' }}>
@@ -74,14 +95,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
             {sidebarOpen && (
               <div style={{ fontSize: 13, fontWeight: 500, flex: 1 }}>
                 <div style={{ color: 'var(--mm-text-primary)', lineHeight: 1.2 }}>{displayName}</div>
-                <div style={{ fontSize: 11, color: 'var(--mm-text-muted)' }}>Free</div>
+                <div style={{ fontSize: 11, color: 'var(--mm-text-muted)' }}>{planLabel}</div>
               </div>
             )}
             {sidebarOpen && (
               <button onClick={handleSignOut} style={{ background: 'none', border: 'none', color: 'var(--mm-text-muted)', fontSize: 10, cursor: 'pointer', padding: 0 }}>Sign out</button>
             )}
           </div>
-          {sidebarOpen && (
+
+          {/* Upgrade CTA – only visible for free users */}
+          {sidebarOpen && !isPaid && (
             <button onClick={handleUpgrade} style={{ marginTop: 12, width: '100%', background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))', border: 'none', borderRadius: 8, padding: '8px 0', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
               Upgrade to Pro →
             </button>
@@ -96,7 +119,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <span style={{ fontFamily: 'var(--mm-font-heading)', fontWeight: 800, fontSize: 18, color: 'var(--mm-text-primary)' }}>Intelligence Dashboard</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: 'var(--mm-text-secondary)' }}>Free</span>
+            <span style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: 'var(--mm-text-secondary)' }}>{planLabel}</span>
             <button onClick={() => navigate('/app')} style={{ background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))', border: 'none', borderRadius: 8, padding: '6px 14px', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ New Meeting</button>
           </div>
         </header>

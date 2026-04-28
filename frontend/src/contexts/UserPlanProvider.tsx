@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { api } from '@/lib/api'
+import { getToken } from '@/lib/supabase'
 
 interface PlanState {
   plan: string
@@ -23,6 +24,15 @@ export function UserPlanProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const fetchPlan = useCallback(async () => {
+    // Only fetch plan if user is authenticated
+    const token = await getToken()
+    if (!token) {
+      setPlan('free')
+      setStatus('inactive')
+      setLoading(false)
+      return
+    }
+
     try {
       const res = await api.get('/payments/subscription')
       setPlan(res.data.subscription?.tier || 'free')

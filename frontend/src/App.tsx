@@ -20,9 +20,10 @@ import { TasksPage } from '@/pages/TasksPage'
 import { CoachingPage } from '@/pages/CoachingPage'
 import { AlertSettingsPage } from '@/pages/AlertSettingsPage'
 import { SpeakerProfileManager } from '@/pages/SpeakerProfileManager'
-import './styles/globals.css'
 import { InitiativeDetailPage } from '@/pages/InitiativeDetailPage'
 import { InitiativesPage } from '@/pages/InitiativesPage'
+import { Pricing } from '@/pages/Pricing'
+import './styles/globals.css'
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/pricing" element={<Pricing />} />
 
               {/* Authenticated pages with Shell */}
               <Route path="/dashboard" element={<ProtectedRoute><Shell><Dashboard /></Shell></ProtectedRoute>} />

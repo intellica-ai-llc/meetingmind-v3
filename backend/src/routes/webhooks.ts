@@ -39,13 +39,14 @@ app.post('/webhook', async (c) => {
       
       await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: userId,
           stripe_customer_id: customerId,
           stripe_subscription_id: subscriptionId,
           subscription_tier: planType,
-          subscription_status: 'active'
-        })
-        .eq('id', userId)
+          subscription_status: 'active',
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'id' })
       
       break
     }
@@ -56,7 +57,7 @@ app.post('/webhook', async (c) => {
       
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, subscription_tier')
         .eq('stripe_customer_id', customerId)
         .single()
       
@@ -66,11 +67,12 @@ app.post('/webhook', async (c) => {
           : 'free'
         await supabase
           .from('profiles')
-          .update({
+          .upsert({
+            id: profile.id,
             subscription_status: subscription.status,
-            subscription_tier: tier
-          })
-          .eq('id', profile.id)
+            subscription_tier: tier,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'id' })
       }
       
       break
@@ -89,11 +91,12 @@ app.post('/webhook', async (c) => {
       if (profile) {
         await supabase
           .from('profiles')
-          .update({
+          .upsert({
+            id: profile.id,
             subscription_status: 'canceled',
-            subscription_tier: 'free'
-          })
-          .eq('id', profile.id)
+            subscription_tier: 'free',
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'id' })
       }
       
       break

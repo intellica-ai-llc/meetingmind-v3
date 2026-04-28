@@ -5,14 +5,13 @@ import { HeroMetrics } from './HeroMetrics'
 import { CoachPanel } from './CoachPanel'
 import { InitiativeGrid } from './InitiativeGrid'
 import { AttentionFeed } from './AttentionFeed'
-import { Card } from '@/components/ui/Card'
 import { api } from '@/lib/api'
 
 export function Dashboard() {
   const { user } = useAuth()
-  const { refetch } = usePlan()
+  const { plan, refetch, isPaid } = usePlan()
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const [newPlan, setNewPlan] = useState('')
+  const [polling, setPolling] = useState(false)
   const [greetingHint, setGreetingHint] = useState('')
 
   const firstName = user?.email?.split('@')[0] ?? 'there'
@@ -25,7 +24,6 @@ export function Dashboard() {
     return 'Good evening'
   }
 
-  // Fetch dashboard stats for the greeting hint
   useEffect(() => {
     api.get('/dashboard/stats')
       .then(res => {
@@ -45,40 +43,116 @@ export function Dashboard() {
       .catch(() => {})
   }, [])
 
-  // Post‑checkout success param
+  // Handle post‑checkout
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const upgrade = params.get('upgrade')
     const success = params.get('success')
     if (upgrade && success === 'true') {
-      refetch().then(() => {
-        setNewPlan(upgrade)
-        setShowUpgradeModal(true)
-        window.history.replaceState({}, document.title, '/dashboard')
-      })
+      // Poll until plan changes or timeout (10 seconds)
+      setPolling(true)
+      let attempts = 0
+      const interval = setInterval(() => {
+        attempts++
+        refetch().then(() => {
+          // refetch updates the context, but we need to check if it's now paid
+          // We'll use the plan state directly after the next tick
+        })
+        if (attempts >= 20) { // 10 seconds max
+          clearInterval(interval)
+          setPolling(false)
+          // If still free, show the modal anyway with a "refresh" message
+          setShowUpgradeModal(true)
+        }
+      }, 500)
+
+      // Clean URL immediately
+      window.history.replaceState({}, document.title, '/dashboard')
+
+      return () => clearInterval(interval)
     }
   }, [refetch])
 
+  // When plan changes to paid, stop polling and show congrats
+  useEffect(() => {
+    if (isPaid && polling) {
+      setPolling(false)
+      setShowUpgradeModal(true)
+    }
+  }, [isPaid, polling])
+
+  const handleDismiss = () => {
+    setShowUpgradeModal(false)
+  }
+
+  // Celebration modal
   if (showUpgradeModal) {
-    const planLabel = newPlan === 'business' ? 'Business' : 'Pro'
-    const features = newPlan === 'business'
-      ? ['Risk aggregation', 'Slack integration', 'Team dashboard']
-      : ['Intelligence dashboard', 'Calendar auto‑ingest', 'Multi‑meeting coach', 'Coaching trends', 'Initiatives']
+    const planLabel = plan === 'business' ? 'Business' : 'Pro'
+    const features = [
+      'Full Intelligence Dashboard',
+      'Calendar auto‑ingest',
+      'Multi‑meeting Coach',
+      'Coaching trends & analytics',
+      'Initiatives & project tracking',
+    ]
 
     return (
-      <div style={{ padding: 24, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-        <div style={{ maxWidth: 500, width: '100%', textAlign: 'center' }}>
-          <Card variant="glass" padding="lg">
-            <div style={{ fontSize: 64, marginBottom: 16 }}>🎉</div>
-            <h2 style={{ color: 'var(--mm-text-primary)', marginBottom: 8 }}>Welcome to {planLabel}!</h2>
-            <p style={{ color: 'var(--mm-text-secondary)', marginBottom: 20 }}>You now have access to:</p>
-            <ul style={{ listStyle: 'none', padding: 0, color: 'var(--mm-text-primary)' }}>
-              {features.map((f) => (<li key={f} style={{ padding: '6px 0', fontSize: 16 }}>✓ {f}</li>))}
-            </ul>
-            <button onClick={() => setShowUpgradeModal(false)} style={{ marginTop: 24, background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))', border: 'none', borderRadius: 8, padding: '12px 24px', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.85)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000,
+        padding: 20,
+      }}>
+        <div style={{
+          maxWidth: 520,
+          width: '100%',
+          background: 'var(--mm-bg-secondary)',
+          border: '1px solid rgba(0,212,255,0.3)',
+          borderRadius: 20,
+          padding: 48,
+          textAlign: 'center',
+          boxShadow: '0 0 60px rgba(0,212,255,0.2)',
+        }}>
+          <div style={{ fontSize: 72, marginBottom: 16 }}>🚀</div>
+          <h1 style={{ fontSize: 32, fontWeight: 800, color: 'var(--mm-text-primary)', margin: '0 0 8px' }}>
+            Welcome to MeetingMind {planLabel}
+          </h1>
+          <p style={{ fontSize: 16, color: 'var(--mm-text-secondary)', marginBottom: 32 }}>
+            You've unlocked the full power of organisational intelligence.
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 12,
+            marginBottom: 32,
+            textAlign: 'left',
+          }}>
+            {features.map((f, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--mm-text-primary)' }}>
+                <span style={{ color: '#00e676', fontWeight: 700 }}>✓</span> {f}
+              </div>
+            ))}
+          </div>
+          {!isPaid ? (
+            <div>
+              <p style={{ color: 'var(--mm-text-secondary)', marginBottom: 12 }}>Your upgrade is being processed. If you don't see changes soon, refresh.</p>
+              <button onClick={() => refetch()} style={{ background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))', border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontWeight: 600, cursor: 'pointer', marginRight: 8 }}>
+                Check again
+              </button>
+              <button onClick={handleDismiss} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 8, padding: '10px 24px', color: 'var(--mm-text-secondary)', fontWeight: 600, cursor: 'pointer' }}>
+                Dismiss
+              </button>
+            </div>
+          ) : (
+            <button onClick={handleDismiss} style={{ background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))', border: 'none', borderRadius: 8, padding: '12px 32px', color: '#fff', fontWeight: 700, fontSize: 16, cursor: 'pointer' }}>
               Get Started
             </button>
-          </Card>
+          )}
         </div>
       </div>
     )
