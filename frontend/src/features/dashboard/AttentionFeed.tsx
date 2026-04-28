@@ -21,21 +21,32 @@ interface Alert {
 export function AttentionFeed() {
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [loading, setLoading] = useState(true)
+  const [coachingNudge, setCoachingNudge] = useState('')
 
   useEffect(() => {
-    api.get('/intelligence/feed')
-      .then(res => setAlerts(res.data.alerts || []))
-      .catch(console.error)
-      .finally(() => setLoading(false))
+    Promise.all([
+      api.get('/intelligence/feed').catch(() => ({ data: { alerts: [] } })),
+      api.get('/dashboard/stats').catch(() => ({ data: {} })),
+    ]).then(([feedRes, statsRes]) => {
+      const a = feedRes.data.alerts || []
+      setAlerts(a)
+      if (a.length === 0) {
+        const { totalMeetings, openTasks, avgScore } = statsRes.data
+        if (totalMeetings === 0) {
+          setCoachingNudge('Record your first meeting to see alerts and coaching tips here.')
+        } else if (totalMeetings === 1) {
+          setCoachingNudge(`Your first meeting scored ${avgScore ?? '—'}/10. Try naming a clear decision next time to boost your score.`)
+        } else if (openTasks > 0) {
+          setCoachingNudge(`You have ${openTasks} open task${openTasks > 1 ? 's' : ''}. Complete them to clear your queue.`)
+        } else {
+          setCoachingNudge('All clear! Your recent meetings show good momentum.')
+        }
+      }
+    }).finally(() => setLoading(false))
   }, [])
 
   const getAlertIcon = (type: string) => {
-    const icons: Record<string, string> = {
-      risk: '⚠',
-      thread: '🔗',
-      task: '📋',
-      initiative: '📊',
-    }
+    const icons: Record<string, string> = { risk: '⚠', thread: '🔗', task: '📋', initiative: '📊' }
     return icons[type] || '•'
   }
 
@@ -48,27 +59,33 @@ export function AttentionFeed() {
   }
 
   if (loading) return <Card variant="glass" padding="md"><p style={{ color: '#6b7fa3' }}>Loading feed…</p></Card>
-  if (alerts.length === 0) return <Card variant="glass" padding="md"><p style={{ color: '#6b7fa3' }}>No alerts right now. Great job!</p></Card>
 
   return (
     <Card variant="glass" padding="md" className="mb-4">
       <h3 style={{ fontSize: 'var(--mm-fs-card-title)', color: 'var(--mm-text-primary)', marginBottom: 12 }}>Attention Feed</h3>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-        {alerts.slice(0, 8).map((alert, i) => (
-          <li key={i} style={{ padding: '8px 12px', marginBottom: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 8, ...getAlertStyle(alert) }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-              <span style={{ fontSize: 16 }}>{getAlertIcon(alert.type)}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, color: 'var(--mm-text-primary)', fontSize: 13 }}>{alert.title}</div>
-                {alert.meeting_title && <div style={{ fontSize: 11, color: '#6b7fa3' }}>Meeting: {alert.meeting_title}</div>}
-                {alert.type === 'task' && <div style={{ fontSize: 11, color: '#6b7fa3' }}>Due: {new Date(alert.due_date!).toLocaleDateString()}</div>}
-                {alert.type === 'thread' && <PriorityBadge priority={alert.severity === 'high' ? 'High' : 'Medium'} />}
-                {alert.health_status && <SentimentBadge sentiment={alert.health_status === 'critical' ? 'Tense' : 'Mixed'} />}
+      {alerts.length === 0 ? (
+        <div style={{ padding: '20px 12px', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>★</div>
+          <p style={{ color: 'var(--mm-text-secondary)', fontSize: 13, lineHeight: 1.6 }}>{coachingNudge}</p>
+        </div>
+      ) : (
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          {alerts.slice(0, 8).map((alert, i) => (
+            <li key={i} style={{ padding: '8px 12px', marginBottom: 6, background: 'rgba(255,255,255,0.03)', borderRadius: 8, ...getAlertStyle(alert) }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <span style={{ fontSize: 16 }}>{getAlertIcon(alert.type)}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, color: 'var(--mm-text-primary)', fontSize: 13 }}>{alert.title}</div>
+                  {alert.meeting_title && <div style={{ fontSize: 11, color: '#6b7fa3' }}>Meeting: {alert.meeting_title}</div>}
+                  {alert.type === 'task' && <div style={{ fontSize: 11, color: '#6b7fa3' }}>Due: {new Date(alert.due_date!).toLocaleDateString()}</div>}
+                  {alert.type === 'thread' && <PriorityBadge priority={alert.severity === 'high' ? 'High' : 'Medium'} />}
+                  {alert.health_status && <SentimentBadge sentiment={alert.health_status === 'critical' ? 'Tense' : 'Mixed'} />}
+                </div>
               </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   )
 }

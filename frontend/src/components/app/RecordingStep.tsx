@@ -1,4 +1,7 @@
+import { useEffect, useState } from 'react'
 import { useApp } from '@/contexts/AppContext'
+import { usePlan } from '@/contexts/UserPlanProvider'
+import { api } from '@/lib/api'
 
 function glowBtn(bg = '#00d4ff', color = '#000', size = 'md') {
   const sizes = {
@@ -36,7 +39,22 @@ export function RecordingStep() {
     isRecording,
     recordingSecs,
     handleStopRecording,
+    selectedInitiativeId,
+    setSelectedInitiativeId,
   } = useApp()
+
+  const { plan } = usePlan()
+  const [initiatives, setInitiatives] = useState<any[]>([])
+  const isFree = plan === 'free' || !plan
+
+  // Fetch initiatives for the dropdown
+  useEffect(() => {
+    if (!isRecording && countdown === null) {
+      api.get('/initiatives')
+        .then(res => setInitiatives(res.data.initiatives || []))
+        .catch(() => {})
+    }
+  }, [isRecording, countdown])
 
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60).toString().padStart(2, '0')
@@ -194,7 +212,7 @@ export function RecordingStep() {
               style={{
                 fontSize: 14,
                 color: 'var(--mm-text-secondary)',
-                margin: '0 0 28px',
+                margin: '0 0 20px',
                 lineHeight: 1.7,
                 maxWidth: 400,
                 marginLeft: 'auto',
@@ -204,6 +222,33 @@ export function RecordingStep() {
               Click <strong style={{ color: 'var(--mm-cyan)' }}>Start Meeting</strong> to record from your
               browser mic. Place your laptop in the centre of the table.
             </p>
+
+            {/* ── Initiative Picker (new) ── */}
+            {initiatives.length > 0 && (
+              <div style={{ maxWidth: 360, margin: '0 auto 20px' }}>
+                <label style={{ fontSize: 12, color: 'var(--mm-text-secondary)', display: 'block', marginBottom: 6, textAlign: 'left' }}>
+                  Assign to initiative (optional)
+                </label>
+                <select
+                  value={selectedInitiativeId || ''}
+                  onChange={e => setSelectedInitiativeId(e.target.value || null)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: 'var(--mm-bg-primary)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 8,
+                    color: 'var(--mm-text-primary)',
+                    fontSize: 13,
+                  }}
+                >
+                  <option value="">No initiative</option>
+                  {initiatives.map((init: any) => (
+                    <option key={init.id} value={init.id}>{init.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Buttons */}
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -227,15 +272,37 @@ export function RecordingStep() {
                 </svg>
                 START MEETING
               </button>
-              <button
-                onClick={handleDemoMode}
-                style={{
-                  ...glowBtn('var(--mm-purple)', '#fff', 'lg'),
-                  boxShadow: '0 0 24px rgba(123,97,255,0.4)',
-                }}
-              >
-                ⚡ DEMO REPORT
-              </button>
+
+              {/* Demo button — only for Free users */}
+              {isFree && (
+                <button
+                  onClick={handleDemoMode}
+                  style={{
+                    ...glowBtn('var(--mm-purple)', '#fff', 'lg'),
+                    boxShadow: '0 0 24px rgba(123,97,255,0.4)',
+                  }}
+                >
+                  ⚡ DEMO REPORT
+                </button>
+              )}
+
+              {/* Subtle demo link for Pro/Business — still available as text */}
+              {!isFree && (
+                <button
+                  onClick={handleDemoMode}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--mm-text-muted)',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    marginTop: 4,
+                  }}
+                >
+                  View a demo report →
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -254,7 +321,6 @@ export function RecordingStep() {
               transition: 'border-color 0.2s',
             }}
           >
-            {/* Cloud upload icon */}
             <div style={{ fontSize: 32, marginBottom: 8, color: 'var(--mm-cyan)' }}>☁️</div>
             <p style={{ fontSize: 14, color: 'var(--mm-text-primary)', margin: '0 0 4px', fontWeight: 600 }}>
               Drop your audio file here

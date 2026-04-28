@@ -52,7 +52,8 @@ interface AppContextType {
   regenLoading: boolean; setRegenLoading: (loading: boolean) => void
   fileError: string; setFileError: (error: string) => void
   demoMode: boolean; setDemoMode: (mode: boolean) => void
-  savedMeetingId: string | null; setSavedMeetingId: (id: string | null) => void   // ← NEW
+  savedMeetingId: string | null; setSavedMeetingId: (id: string | null) => void
+  selectedInitiativeId: string | null; setSelectedInitiativeId: (id: string | null) => void   // ← NEW
   reset: () => void
   handleStartMeeting: () => void
   handleStopRecording: () => void
@@ -94,7 +95,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [regenLoading, setRegenLoading] = useState(false)
   const [fileError, setFileError] = useState('')
   const [demoMode, setDemoMode] = useState(false)
-  const [savedMeetingId, setSavedMeetingId] = useState<string | null>(null)   // ← NEW
+  const [savedMeetingId, setSavedMeetingId] = useState<string | null>(null)
+  const [selectedInitiativeId, setSelectedInitiativeId] = useState<string | null>(null)   // ← NEW
 
   // ── Refs ─────────────────────────────────────────────────
   const pollRef = useRef<number | null>(null)
@@ -129,7 +131,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMeetingDate(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))
     setFileError('')
     setDemoMode(false)
-    setSavedMeetingId(null)   // ← NEW
+    setSavedMeetingId(null)
+    setSelectedInitiativeId(null)   // ← NEW
   }
 
   // ── Recording timer ──────────────────────────────────────
@@ -460,7 +463,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       regenLoading, setRegenLoading,
       fileError, setFileError,
       demoMode, setDemoMode,
-      savedMeetingId, setSavedMeetingId,   // ← NEW
+      savedMeetingId, setSavedMeetingId,
+      selectedInitiativeId, setSelectedInitiativeId,   // ← NEW
       reset,
       handleStartMeeting,
       handleStopRecording,

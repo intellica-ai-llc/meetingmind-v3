@@ -36,8 +36,7 @@ export function HeroMetrics() {
             background: 'var(--mm-bg-secondary)',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: 'var(--mm-radius-card)',
-            padding: 20,
-            height: 100,
+            padding: 20, height: 100,
           }}>
             <div style={{ background: 'rgba(255,255,255,0.06)', height: 16, width: '60%', borderRadius: 6, marginBottom: 12 }} />
             <div style={{ background: 'rgba(255,255,255,0.04)', height: 32, width: '40%', borderRadius: 6 }} />
@@ -49,13 +48,25 @@ export function HeroMetrics() {
 
   if (!stats) return null
 
+  const subtext = (label: string) => {
+    if (label === 'Average Score') {
+      return stats.totalMeetings < 3 ? '— · not enough data' : 'trending —'
+    }
+    if (label === 'Open Tasks') {
+      return stats.openTasks > 0 ? `${stats.openTasks} open · view all →` : 'all clear'
+    }
+    if (label === 'Unresolved Threads') {
+      return stats.unresolvedThreads > 0 ? `${stats.unresolvedThreads} active · view all →` : 'all clear'
+    }
+    return `${stats.totalMeetings} recorded · view all →`
+  }
+
   const cards = [
     {
       label: 'Total Meetings',
       value: stats.totalMeetings,
       format: (v: number) => v.toString(),
       icon: '📅',
-      color: 'var(--mm-cyan)',
       onClick: () => navigate('/meetings'),
     },
     {
@@ -63,15 +74,13 @@ export function HeroMetrics() {
       value: stats.avgScore,
       format: (v: number | null) => v !== null ? `${v}/10` : '—',
       icon: '📊',
-      color: 'var(--mm-purple)',
-      onClick: undefined,
+      onClick: stats.totalMeetings >= 3 ? () => navigate('/coaching') : undefined,
     },
     {
       label: 'Open Tasks',
       value: stats.openTasks,
       format: (v: number) => v.toString(),
       icon: '✅',
-      color: 'var(--mm-success)',
       onClick: () => navigate('/tasks'),
     },
     {
@@ -79,8 +88,7 @@ export function HeroMetrics() {
       value: stats.unresolvedThreads,
       format: (v: number) => v.toString(),
       icon: '🔗',
-      color: 'var(--mm-warning)',
-      onClick: () => navigate('/patterns'),
+      onClick: () => navigate('/initiatives'),
     },
   ]
 
@@ -112,6 +120,9 @@ export function HeroMetrics() {
           </div>
           <div style={{ fontSize: 13, color: 'var(--mm-text-secondary)', fontWeight: 500 }}>
             {card.label}
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--mm-text-muted)', marginTop: 4 }}>
+            {subtext(card.label)}
           </div>
         </div>
       ))}
