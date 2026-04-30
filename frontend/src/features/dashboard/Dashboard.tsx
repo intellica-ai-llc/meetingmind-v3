@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { HeroMetrics } from './HeroMetrics'
 import { CoachPanel } from './CoachPanel'
 import { InitiativeGrid } from './InitiativeGrid'
 import { AttentionFeed } from './AttentionFeed'
 import { api } from '@/lib/api'
+import { Card } from '@/components/ui/Card'
 
 export function Dashboard() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [greetingHint, setGreetingHint] = useState('')
+  const [totalMeetings, setTotalMeetings] = useState<number | null>(null)
 
   const firstName = user?.email?.split('@')[0] ?? 'there'
   const displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1)
@@ -24,6 +28,7 @@ export function Dashboard() {
     api.get('/dashboard/stats')
       .then(res => {
         const { totalMeetings, openTasks, avgScore } = res.data
+        setTotalMeetings(totalMeetings)
         if (totalMeetings === 0) {
           setGreetingHint('Record your first meeting to unlock insights.')
         } else if (totalMeetings === 1) {
@@ -38,6 +43,71 @@ export function Dashboard() {
       })
       .catch(() => {})
   }, [])
+
+  // Smart Launch Hero for first-time users
+  if (totalMeetings === 0) {
+    return (
+      <div style={{ maxWidth: 700, margin: '0 auto', padding: '40px 20px', textAlign: 'center' }}>
+        <h1 style={{ fontSize: 36, fontWeight: 800, color: 'var(--mm-text-primary)', marginBottom: 16 }}>
+          Welcome to your Intelligence Dashboard
+        </h1>
+        <p style={{ fontSize: 16, color: 'var(--mm-text-secondary)', marginBottom: 32, lineHeight: 1.7, maxWidth: 500, marginLeft: 'auto', marginRight: 'auto' }}>
+          Turn any meeting into decisions, tasks, risks, and follow‑through in minutes.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', marginBottom: 32 }}>
+          <button
+            onClick={() => navigate('/app')}
+            style={{
+              background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))',
+              border: 'none',
+              borderRadius: 12,
+              padding: '16px 32px',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: 16,
+              cursor: 'pointer',
+              width: '100%',
+              maxWidth: 340,
+            }}
+          >
+            + Start Live Meeting
+          </button>
+          <button
+            onClick={() => navigate('/app')}
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: 12,
+              padding: '16px 32px',
+              color: 'var(--mm-text-primary)',
+              fontWeight: 600,
+              fontSize: 15,
+              cursor: 'pointer',
+              width: '100%',
+              maxWidth: 340,
+            }}
+          >
+            Upload Recording
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap', fontSize: 13, color: 'var(--mm-text-muted)' }}>
+          <span>⚡ Decisions extracted</span>
+          <span>⚡ Tasks auto‑created</span>
+          <span>⚡ Cross‑meeting memory enabled</span>
+        </div>
+
+        <div style={{ marginTop: 40 }}>
+          <Card variant="glass" padding="md">
+            <p style={{ color: 'var(--mm-text-secondary)', fontSize: 13, textAlign: 'left' }}>
+              Your dashboard will populate with meeting scores, open tasks, unresolved threads, and initiative health — automatically, after your first recording.
+            </p>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>

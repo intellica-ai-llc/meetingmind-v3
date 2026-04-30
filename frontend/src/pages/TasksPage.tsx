@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { TaskCard } from '@/features/dashboard/TaskCard'
-import { EmptyState } from '@/components/ui/EmptyState'
 
 interface Task {
   id: string
@@ -24,6 +24,7 @@ export function TasksPage() {
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [newTask, setNewTask] = useState({ title: '', description: '', owner_name: '', due_date: '', priority: 'Medium' })
+  const navigate = useNavigate()
 
   const fetchTasks = async () => {
     try {
@@ -124,11 +125,35 @@ export function TasksPage() {
         <p style={{ color: 'var(--mm-text-secondary)' }}>Loading tasks...</p>
       ) : tasks.length === 0 ? (
         <Card variant="glass" padding="lg">
-          <EmptyState
-            icon="📋"
-            headline="No tasks yet"
-            subtext="Tasks from your meetings or manually created will appear here."
-          />
+          <div style={{ textAlign: 'center', padding: '20px 0' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+            <h2 style={{ color: 'var(--mm-text-primary)', marginBottom: 8 }}>
+              No tasks yet — your first meeting can generate tasks automatically
+            </h2>
+            <p style={{ color: 'var(--mm-text-secondary)', marginBottom: 24 }}>
+              MeetingMind extracts owners, deadlines, and action items from conversations.
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => navigate('/app')}
+                style={primaryBtnStyle}
+              >
+                Start Live Meeting
+              </button>
+              <button
+                onClick={() => navigate('/app')}
+                style={secondaryBtnStyle}
+              >
+                Upload Recording
+              </button>
+              <button
+                onClick={() => setShowCreate(true)}
+                style={{ ...secondaryBtnStyle, borderColor: 'rgba(255,255,255,0.25)' }}
+              >
+                Create Manual Task
+              </button>
+            </div>
+          </div>
         </Card>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px,1fr))', gap: 16 }}>
@@ -165,7 +190,7 @@ const primaryBtnStyle: React.CSSProperties = {
   background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))',
   border: 'none',
   borderRadius: 6,
-  padding: '6px 14px',
+  padding: '10px 20px',
   color: '#fff',
   fontWeight: 600,
   fontSize: 13,
@@ -176,7 +201,7 @@ const secondaryBtnStyle: React.CSSProperties = {
   background: 'transparent',
   border: '1px solid rgba(255,255,255,0.15)',
   borderRadius: 6,
-  padding: '6px 14px',
+  padding: '10px 20px',
   color: 'var(--mm-text-secondary)',
   fontWeight: 600,
   fontSize: 13,

@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { PlanGate } from '@/components/PlanGate'
-import { EmptyState } from '@/components/ui/EmptyState'
 
 interface Initiative {
   id: string
@@ -15,6 +14,7 @@ interface Initiative {
 export function InitiativesPage() {
   const [initiatives, setInitiatives] = useState<Initiative[]>([])
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   const fetchInitiatives = async () => {
     try {
@@ -72,28 +72,47 @@ export function InitiativesPage() {
           <p style={{ color: 'var(--mm-text-secondary)' }}>Loading initiatives...</p>
         ) : initiatives.length === 0 ? (
           <Card variant="glass" padding="lg">
-            <EmptyState
-              icon="📊"
-              headline="No initiatives yet"
-              subtext="Group your meetings into strategic initiatives to track progress and risks over time."
-              cta={
+            <div style={{ textAlign: 'center', padding: '20px 0' }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+              <h2 style={{ color: 'var(--mm-text-primary)', marginBottom: 8 }}>
+                Turn recurring meetings into strategic initiatives
+              </h2>
+              <p style={{ color: 'var(--mm-text-secondary)', marginBottom: 24, maxWidth: 460, marginLeft: 'auto', marginRight: 'auto' }}>
+                Group meetings into trackable company priorities. Each initiative gets a health score, timeline, and cross‑meeting intelligence.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button
                   onClick={handleCreate}
                   style={{
                     background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))',
                     border: 'none',
-                    borderRadius: 'var(--mm-radius-button)',
+                    borderRadius: 8,
                     padding: '10px 20px',
-                    color: '#0A0B1A',
-                    fontWeight: 700,
+                    color: '#fff',
+                    fontWeight: 600,
                     fontSize: 14,
                     cursor: 'pointer',
                   }}
                 >
                   Create Your First Initiative
                 </button>
-              }
-            />
+                <button
+                  onClick={() => navigate('/meetings')}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: 8,
+                    padding: '10px 20px',
+                    color: 'var(--mm-text-secondary)',
+                    fontWeight: 600,
+                    fontSize: 14,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Link Existing Meetings
+                </button>
+              </div>
+            </div>
           </Card>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
