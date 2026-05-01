@@ -14,7 +14,6 @@ app.get('/callback', async (c) => {
 
   const redirectUri = 'https://meetingmind-api-production.intellicaai-ai.workers.dev/api/calendar/callback'
 
-  // Exchange code for tokens
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -55,7 +54,6 @@ app.get('/callback', async (c) => {
       })
       .eq('id', userId)
 
-    // Register a watch channel for push notifications
     if (accessToken) {
       try {
         await registerWatchChannel(c.env, userId, accessToken)
@@ -98,7 +96,6 @@ app.post('/connect', requirePlan('pro'), async (c) => {
 app.post('/webhook', async (c) => {
   const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
 
-  // Google sends headers: X-Goog-Channel-ID, X-Goog-Channel-Token, X-Goog-Resource-ID, etc.
   const channelId = c.req.header('X-Goog-Channel-ID')
   const channelToken = c.req.header('X-Goog-Channel-Token')
   const resourceState = c.req.header('X-Goog-Resource-State')
@@ -108,7 +105,6 @@ app.post('/webhook', async (c) => {
     return c.json({ error: 'Missing required headers' }, 400)
   }
 
-  // Find the user by channel token (we stored channelToken = userId in registration)
   const userId = channelToken
   const { data: profile } = await supabase
     .from('profiles')
@@ -118,7 +114,6 @@ app.post('/webhook', async (c) => {
 
   if (!profile) return c.json({ error: 'Unknown user' }, 404)
 
-  // Verify channel ID matches stored value (optional security)
   const { data: storedChannel } = await supabase
     .from('profiles')
     .select('google_calendar_channel_id')
@@ -129,18 +124,11 @@ app.post('/webhook', async (c) => {
     return c.json({ error: 'Channel ID mismatch' }, 403)
   }
 
-  // If resource state is 'sync' or 'exists', we should process the event
-  // For delivery of event changes, Google sends 'exists' or 'not_exists'
   if (resourceState === 'exists' || resourceState === 'sync') {
-    // The notification indicates that events have changed.
-    // In a full implementation we could fetch the changed event using resourceId,
-    // but for MVP we can simply trigger the calendar polling function immediately
-    // to pick up any new events.
     const { pollCalendarEvents } = await import('../services/calendar')
     ctx.waitUntil(pollCalendarEvents(c.env))
   }
 
-  // Acknowledge receipt
   return c.json({ status: 'ok' })
 })
 
@@ -157,6 +145,111 @@ app.get('/status', requirePlan('pro'), async (c) => {
   return c.json({
     enabled: profile?.google_calendar_sync_enabled || false,
   })
+})
+
+// ── Upcoming Events (NEW) ──────────────────────────────────
+app.get('/upcoming', requirePlan('pro'), async (c) => {
+  const user = c.get('user')
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
+
+  // 1. Get refresh token from profiles
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('google_calendar_refresh_token, google_calendar_sync_enabled')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.google_calendar_refresh_token || !profile?.google_calendar_sync_enabled) {
+    return c.json({ events: [], connected: false })
+  }
+
+  // 2. Check KV cache (5 minutes)
+  const cacheKey = `calendar:upcoming:${user.id}`
+  let cached: string | null = null
+  try {
+    if (c.env.MEETING_JOBS) {
+      cached = await c.env.MEETING_JOBS.get(cacheKey)
+    }
+  } catch {}
+
+  if (cached) {
+    try {
+      return c.json(JSON.parse(cached))
+    } catch {}
+  }
+
+  // 3. Refresh access token
+  let accessToken: string
+  try {
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: c.env.GOOGLE_CLIENT_ID,
+        client_secret: c.env.GOOGLE_CLIENT_SECRET,
+        refresh_token: profile.google_calendar_refresh_token,
+        grant_type: 'refresh_token',
+      }),
+    })
+
+    if (!tokenRes.ok) {
+      console.error('Google token refresh failed', await tokenRes.text())
+      return c.json({ error: 'Failed to refresh Google token. Please reconnect your calendar.' }, 502)
+    }
+
+    const tokens = await tokenRes.json()
+    accessToken = tokens.access_token
+  } catch (err: any) {
+    console.error('Google token refresh exception', err.message)
+    return c.json({ error: 'Failed to communicate with Google. Please try again later.' }, 502)
+  }
+
+  // 4. Fetch upcoming events
+  let events: any[] = []
+  try {
+    const now = new Date().toISOString()
+    const calRes = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/primary/events?` +
+      new URLSearchParams({
+        timeMin: now,
+        singleEvents: 'true',
+        orderBy: 'startTime',
+        maxResults: '100',
+      }),
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    )
+
+    if (!calRes.ok) {
+      const errText = await calRes.text()
+      console.error('Google Calendar events fetch failed', errText)
+      return c.json({ error: 'Failed to fetch calendar events. Please try again.' }, 502)
+    }
+
+    const data = await calRes.json()
+    events = (data.items || []).map((event: any) => ({
+      id: event.id,
+      title: event.summary || '(No title)',
+      start: event.start?.dateTime || event.start?.date,
+      end: event.end?.dateTime || event.end?.date,
+      attendees: event.attendees?.map((a: any) => a.email) || [],
+      hangoutLink: event.hangoutLink || null,
+      conferenceData: event.conferenceData || null,
+    }))
+  } catch (err: any) {
+    console.error('Google Calendar fetch exception', err.message)
+    return c.json({ error: 'Failed to fetch calendar events. Please try again.' }, 502)
+  }
+
+  const response = { events, connected: true }
+
+  // 5. Cache for 5 minutes
+  try {
+    if (c.env.MEETING_JOBS) {
+      await c.env.MEETING_JOBS.put(cacheKey, JSON.stringify(response), { expirationTtl: 300 })
+    }
+  } catch {}
+
+  return c.json(response)
 })
 
 export default app
