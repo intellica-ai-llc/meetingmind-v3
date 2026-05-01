@@ -11,8 +11,8 @@ export function Card({ children, className = '', padding = 'md', variant = 'defa
   const paddingStyles: Record<string, React.CSSProperties> = {
     none: { padding: 0 },
     sm:   { padding: 12 },
-    md:   { padding: 18 },
-    lg:   { padding: 24 },
+    md:   { padding: 20 },
+    lg:   { padding: 28 },
   }
 
   const variantStyles: Record<string, React.CSSProperties> = {
@@ -29,16 +29,16 @@ export function Card({ children, className = '', padding = 'md', variant = 'defa
       border: '1px solid rgba(251, 191, 36, 0.3)',
     },
     glass: {
-      background: 'var(--mm-bg-secondary)',
-      border: 'var(--mm-border-glass)',
+      background: 'rgba(12,18,36,0.88)',
+      border: '1px solid rgba(255,255,255,0.06)',
       backdropFilter: 'blur(12px)',
-      boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+      boxShadow: '0 10px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.03)',
     },
   }
 
   const baseStyle: React.CSSProperties = {
     borderRadius: 'var(--mm-radius-card)',
-    marginBottom: 14,
+    marginBottom: 16,
     transition: 'transform var(--mm-duration-fast) var(--mm-ease-out), border-color var(--mm-duration-fast) var(--mm-ease-out), box-shadow var(--mm-duration-fast) var(--mm-ease-out)',
     ...paddingStyles[padding],
     ...variantStyles[variant],

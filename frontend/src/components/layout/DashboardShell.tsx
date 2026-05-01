@@ -62,7 +62,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       color: 'var(--mm-text-primary)',
       position: 'relative',
     }}>
-      {/* Outer glass panel — wireframe spec */}
+      {/* Outer glass panel */}
       <div style={{
         width: '100%',
         maxWidth: 1440,
@@ -90,7 +90,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          overflowY: 'auto',   // ← FIXED: sidebar now scrolls when content overflows
+          overflowY: 'auto',
         }}>
           <div>
             <div style={{ padding: '32px 24px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
@@ -111,9 +111,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     textDecoration: 'none',
                     color: active ? '#fff' : 'var(--mm-text-secondary)',
                     background: active ? 'rgba(80,120,255,0.14)' : 'transparent',
-                    borderRadius: 12,
+                    borderRadius: 14,
                     fontSize: 14,
                     fontWeight: 500,
+                    height: 46,
+                    boxShadow: active ? '0 0 8px rgba(38,182,255,0.15)' : 'none',
                     transition: 'all var(--mm-duration-fast) var(--mm-ease-out)',
                   }}
                   onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
@@ -130,7 +132,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {/* Performance Card + User */}
           <div>
             <SidebarPerformanceCard />
-            <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{
+              padding: '16px',
+              borderTop: '1px solid rgba(255,255,255,0.05)',
+              background: 'rgba(12,18,36,0.88)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '0 0 14px 14px',
+            }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--mm-purple)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{initials}</div>
                 <div style={{ fontSize: 13, fontWeight: 500, flex: 1 }}>
@@ -169,7 +177,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               {/* AI Status Pill */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 20, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--mm-success)', boxShadow: '0 0 6px rgba(52,211,153,0.6)' }} />
+                <span className="ai-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--mm-success)' }} />
                 <span style={{ fontSize: 11, color: 'var(--mm-success)', fontWeight: 500 }}>Intelligence Active</span>
               </div>
               {/* Plan Badge */}

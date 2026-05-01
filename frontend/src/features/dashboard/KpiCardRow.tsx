@@ -26,8 +26,9 @@ export function KpiCardRow() {
     {
       label: 'Overall Score',
       value: kpi.overallScore,
-      sub: kpi.overallScore !== null ? 'Great' : '—',
+      sub: kpi.overallScore !== null ? 'Great' : 'No meetings yet',
       trend: kpi.scoreTrend !== null ? `${kpi.scoreTrend > 0 ? '↑' : kpi.scoreTrend < 0 ? '↓' : '→'} ${Math.abs(kpi.scoreTrend)}%` : null,
+      emptyReason: 'Start recording to unlock insights',
       render: () => (
         <ScoreRing score={kpi.overallScore ?? 0} />
       ),
@@ -35,8 +36,9 @@ export function KpiCardRow() {
     {
       label: 'Talk Ratio',
       value: kpi.talkRatio,
-      sub: kpi.talkRatio !== null ? `${kpi.talkRatio}%` : '—',
+      sub: kpi.talkRatio !== null ? `${kpi.talkRatio}%` : 'No data yet',
       trend: null,
+      emptyReason: 'Data available after first meeting',
       render: () => (
         <div style={{ width: 72, height: 72, borderRadius: '50%', border: '5px solid var(--mm-cyan)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--mm-text-primary)' }}>{kpi.talkRatio ?? '—'}</span>
@@ -46,8 +48,9 @@ export function KpiCardRow() {
     {
       label: 'Sentiment',
       value: kpi.sentiment ?? '—',
-      sub: kpi.sentiment ?? '—',
+      sub: kpi.sentiment ?? 'No data yet',
       trend: kpi.sentimentTrend ? `${kpi.sentimentTrend}` : null,
+      emptyReason: 'Record a meeting to see sentiment',
       render: () => (
         <div style={{ fontSize: 32 }}>{kpi.sentiment === 'Positive' ? '🟢' : kpi.sentiment === 'Negative' ? '🔴' : '⚪'}</div>
       ),
@@ -55,8 +58,9 @@ export function KpiCardRow() {
     {
       label: 'Engagement',
       value: kpi.engagementRate,
-      sub: kpi.engagementRate !== null ? `${kpi.engagementRate}/hr` : '—',
+      sub: kpi.engagementRate !== null ? `${kpi.engagementRate}/hr` : 'No data yet',
       trend: kpi.engagementTrend !== null ? `${kpi.engagementTrend > 0 ? '↑' : kpi.engagementTrend < 0 ? '↓' : '→'} ${Math.abs(kpi.engagementTrend)}` : null,
+      emptyReason: 'Analyze meetings to track engagement',
       render: () => (
         <div style={{ fontSize: 32 }}>🎯</div>
       ),
@@ -64,7 +68,7 @@ export function KpiCardRow() {
   ]
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
       {kpiCards.map(card => (
         <Card key={card.label} variant="glass" padding="md">
           <div style={{ textAlign: 'center' }}>
@@ -74,6 +78,11 @@ export function KpiCardRow() {
             {card.trend && (
               <div style={{ fontSize: 12, color: card.trend.startsWith('↑') ? 'var(--mm-success)' : card.trend.startsWith('↓') ? 'var(--mm-danger)' : 'var(--mm-text-muted)', marginTop: 2 }}>
                 {card.trend}
+              </div>
+            )}
+            {card.value === null && card.emptyReason && (
+              <div style={{ fontSize: 11, color: 'var(--mm-text-muted)', marginTop: 6, fontStyle: 'italic' }}>
+                {card.emptyReason}
               </div>
             )}
           </div>

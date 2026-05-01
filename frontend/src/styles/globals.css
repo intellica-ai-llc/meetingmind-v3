@@ -4,9 +4,12 @@
 @import './responsive.css';
 @import './reduced-motion.css';
 
-/* ── Premium background additions ── */
+/* ── Premium page background with radial glow zones ── */
 body {
-  background: var(--mm-bg-primary);
+  background:
+    radial-gradient(circle at 80% 10%, rgba(38,182,255,0.15), transparent 30%),
+    radial-gradient(circle at 20% 90%, rgba(122,92,255,0.12), transparent 35%),
+    var(--mm-bg-primary);
 }
 
 body::before {
@@ -103,9 +106,21 @@ body::before {
   animation: slideInLeft 0.35s var(--mm-ease-out) both;
 }
 
+/* ── AI Pulse animation (for Intelligence Active pill) ── */
+@keyframes aiPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(52,211,153,0.6); }
+  50%      { box-shadow: 0 0 14px rgba(52,211,153,0.9); }
+}
+
+.ai-pulse {
+  animation: aiPulse 2s ease-in-out infinite;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── All existing hero / pipeline / workshop styles remain unchanged below ── */
 
 .hero-terminal {
   position: relative;

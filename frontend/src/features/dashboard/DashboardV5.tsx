@@ -45,34 +45,37 @@ export function DashboardV5() {
 
   return (
     <div>
-      {/* Greeting block — matches old dashboard intelligence */}
-      <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--mm-text-primary)', margin: 0 }}>
+      {/* Hero Strip — premium greeting */}
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{ fontSize: 42, fontWeight: 800, color: 'var(--mm-text-primary)', margin: 0, lineHeight: 1.1 }}>
           {getGreeting()}, {displayName}
-        </h2>
-        <p style={{ fontSize: 14, color: 'var(--mm-text-secondary)', margin: '4px 0 0' }}>
-          {greetingHint || `Here's your organisational intelligence at a glance.`}
+        </h1>
+        <p style={{ fontSize: 15, color: 'var(--mm-text-secondary)', margin: '8px 0 0', maxWidth: 600 }}>
+          {greetingHint || `Track decisions, action items, blockers, and momentum across every meeting.`}
         </p>
       </div>
 
-      <SummaryHeader />
+      <div style={{ marginBottom: 28 }}>
+        <SummaryHeader />
+      </div>
+
       <KpiCardRow />
 
       {/* Three-panel row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 28 }}>
         <KeyInsightsPanel />
         <TopActionItemsPanel />
         <CoachTipPanel />
       </div>
 
-      {/* Initiatives Grid — moved below Key Insights */}
-      <div style={{ marginBottom: 24 }}>
+      {/* Initiatives Grid */}
+      <div style={{ marginBottom: 28 }}>
         <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--mm-text-primary)', marginBottom: 12 }}>Initiatives</h3>
         <InitiativeGrid />
       </div>
 
-      {/* Attention Feed — never empty, critical for intelligence loop */}
-      <div style={{ marginBottom: 24 }}>
+      {/* Attention Feed */}
+      <div style={{ marginBottom: 28 }}>
         <AttentionFeed />
       </div>
 
