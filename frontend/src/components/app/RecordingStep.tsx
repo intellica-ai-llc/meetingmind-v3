@@ -41,11 +41,45 @@ export function RecordingStep() {
     handleStopRecording,
     selectedInitiativeId,
     setSelectedInitiativeId,
+    setMeetingTitle,
+    setMeetingDate,
   } = useApp()
 
   const { plan } = usePlan()
   const [initiatives, setInitiatives] = useState<any[]>([])
+  const [prepareTitle, setPrepareTitle] = useState<string | null>(null)
+  const [prepareAttendees, setPrepareAttendees] = useState<string[]>([])
   const isFree = plan === 'free' || !plan
+
+  // ── Calendar prepare mode ─────────────────────────────────
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const prepare = params.get('prepare')
+    if (prepare === 'true') {
+      const title = params.get('title')
+      const date = params.get('date')
+      const attendees = params.get('attendees')
+
+      if (title) {
+        setPrepareTitle(title)
+        setMeetingTitle(title)
+      }
+      if (date) {
+        const formatted = new Date(date).toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })
+        setMeetingDate(formatted)
+      }
+      if (attendees) {
+        setPrepareAttendees(attendees.split(',').map(a => a.trim()).filter(Boolean))
+      }
+
+      // Clean URL so refresh doesn't re‑apply
+      window.history.replaceState({}, document.title, '/app')
+    }
+  }, [setMeetingTitle, setMeetingDate])
 
   // Fetch initiatives for the dropdown
   useEffect(() => {
@@ -167,8 +201,31 @@ export function RecordingStep() {
             </button>
           </div>
         ) : (
-          /* ---- INITIAL STATE ---- */
+          /* ---- INITIAL STATE (with optional Prepare header) ---- */
           <div style={{ position: 'relative', zIndex: 1 }}>
+            {/* ── Prepare banner ── */}
+            {prepareTitle && (
+              <div style={{
+                marginBottom: 24,
+                padding: '12px 20px',
+                background: 'rgba(38,182,255,0.08)',
+                border: '1px solid rgba(38,182,255,0.2)',
+                borderRadius: 12,
+                display: 'inline-block',
+                textAlign: 'left',
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--mm-cyan)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                  Preparing for
+                </div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--mm-text-primary)' }}>{prepareTitle}</div>
+                {prepareAttendees.length > 0 && (
+                  <div style={{ fontSize: 12, color: 'var(--mm-text-secondary)', marginTop: 4 }}>
+                    Attendees: {prepareAttendees.join(', ')}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Mic icon — larger, with glow */}
             <div
               style={{
@@ -206,7 +263,7 @@ export function RecordingStep() {
                 margin: '0 0 8px',
               }}
             >
-              Ready to capture your meeting?
+              {prepareTitle ? 'Get ready to capture' : 'Ready to capture your meeting?'}
             </h2>
             <p
               style={{
@@ -223,7 +280,7 @@ export function RecordingStep() {
               browser mic. Place your laptop in the centre of the table.
             </p>
 
-            {/* ── Initiative Picker (new) ── */}
+            {/* ── Initiative Picker ── */}
             {initiatives.length > 0 && (
               <div style={{ maxWidth: 360, margin: '0 auto 20px' }}>
                 <label style={{ fontSize: 12, color: 'var(--mm-text-secondary)', display: 'block', marginBottom: 6, textAlign: 'left' }}>

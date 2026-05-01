@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useSubscription } from '@/hooks/useSubscription'
 import { api } from '@/lib/api'
 
 export function Settings() {
+  const { user } = useAuth()
   const { subscription, loading: subLoading } = useSubscription()
   const tier = subscription?.tier || 'free'
 
@@ -15,8 +17,26 @@ export function Settings() {
   const isPro = tier === 'pro' || tier === 'business'
   const isBusiness = tier === 'business'
 
+  // ── Detect return from Google OAuth ──────────────────────
   useEffect(() => {
-    if (isPro) {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('calendar') === 'connected') {
+      // Immediately show Connected – the backend already stored the token
+      setCalendarEnabled(true)
+      // Clean the URL
+      window.history.replaceState({}, document.title, '/settings')
+      // Verify with the backend in the background
+      api.get('/calendar/status')
+        .then(r => {
+          if (!r.data.enabled) setCalendarEnabled(false)
+        })
+        .catch(() => {})
+    }
+  }, [])
+
+  // ── Regular status check ─────────────────────────────────
+  useEffect(() => {
+    if (isPro && !calendarEnabled) {
       api.get('/calendar/status')
         .then(r => setCalendarEnabled(r.data.enabled))
         .catch(() => {})
@@ -29,7 +49,7 @@ export function Settings() {
         })
         .catch(() => {})
     }
-  }, [isPro, isBusiness])
+  }, [isPro, isBusiness, calendarEnabled])
 
   const handleConnectCalendar = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string
@@ -39,7 +59,7 @@ export function Settings() {
     }
     const redirectUri = 'https://meetingmind-api-production.intellicaai-ai.workers.dev/api/calendar/callback'
     const scope = 'https://www.googleapis.com/auth/calendar.events.readonly'
-    const state = ''
+    const state = user?.id || ''
     const url = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}` +
       `&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent` +

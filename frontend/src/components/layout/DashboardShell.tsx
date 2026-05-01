@@ -70,7 +70,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         display: 'flex',
         borderRadius: 24,
         overflow: 'hidden',
-        overflowY: 'auto',
         background: 'rgba(8,14,28,0.88)',
         border: '1px solid rgba(255,255,255,0.06)',
         boxShadow: '0 20px 80px rgba(0,0,0,0.45)',
@@ -91,7 +90,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          overflow: 'hidden',
+          overflowY: 'auto',   // ← FIXED: sidebar now scrolls when content overflows
         }}>
           <div>
             <div style={{ padding: '32px 24px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>

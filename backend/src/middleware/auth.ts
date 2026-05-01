@@ -1,7 +1,20 @@
 import { createMiddleware } from 'hono/factory'
 import { createClient } from '@supabase/supabase-js'
 
+// Paths that must be accessible without a JWT
+const PUBLIC_PATHS = [
+  '/api/calendar/callback',
+  '/api/calendar/webhook',
+  '/api/payments/webhook',
+]
+
 export const authMiddleware = createMiddleware(async (c, next) => {
+  // Allow public enpoints through without authentication
+  const url = new URL(c.req.url)
+  if (PUBLIC_PATHS.some(path => url.pathname === path)) {
+    return await next()
+  }
+
   const supabaseUrl = c.env.SUPABASE_URL
   const supabaseKey = c.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -11,8 +24,6 @@ export const authMiddleware = createMiddleware(async (c, next) => {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return c.json({
       error: 'Unauthorized - no token',
-      debug_url: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'MISSING',
-      debug_key: supabaseKey ? supabaseKey.substring(0, 10) + '...' : 'MISSING'
     }, 401)
   }
 
@@ -22,9 +33,7 @@ export const authMiddleware = createMiddleware(async (c, next) => {
   if (error || !user) {
     return c.json({
       error: 'Invalid token',
-      debug_url: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'MISSING',
-      debug_key: supabaseKey ? supabaseKey.substring(0, 10) + '...' : 'MISSING',
-      supabase_error: error?.message || 'No user returned'
+      supabase_error: error?.message || 'No user returned',
     }, 401)
   }
 

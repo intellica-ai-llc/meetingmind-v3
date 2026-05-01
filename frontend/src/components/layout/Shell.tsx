@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { usePlan } from '@/contexts/UserPlanProvider'
-import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
 import { Button } from '@/components/ui/Button'
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
+import { SidebarPerformanceCard } from '@/features/dashboard/SidebarPerformanceCard'
 import { api } from '@/lib/api'
 
 const Icon = ({ d, active = false }: { d: string; active?: boolean }) => (
@@ -51,95 +52,154 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const planLabel = isPaid ? (plan === 'business' ? 'Business' : 'Pro') : 'Free'
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--mm-gradient-page)', fontFamily: 'var(--mm-font-body)', color: 'var(--mm-text-primary)' }}>
-      {sidebarOpen && (
-        <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 90 }} />
-      )}
-
-      <aside style={{
-        width: sidebarOpen ? 240 : 64, minWidth: sidebarOpen ? 240 : 64,
-        background: 'var(--mm-bg-secondary)', borderRight: 'var(--mm-border-glass)',
-        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        transition: 'width var(--mm-duration-fast) var(--mm-ease-out)',
-        position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100, overflow: 'hidden',
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 24,
+      background: 'var(--mm-gradient-page)',
+      fontFamily: 'var(--mm-font-body)',
+      color: 'var(--mm-text-primary)',
+      position: 'relative',
+    }}>
+      {/* Outer glass panel */}
+      <div style={{
+        width: '100%',
+        maxWidth: 1440,
+        height: 'calc(100vh - 48px)',
+        display: 'flex',
+        borderRadius: 24,
+        overflow: 'hidden',
+        background: 'rgba(8,14,28,0.88)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        boxShadow: '0 20px 80px rgba(0,0,0,0.45)',
+        backdropFilter: 'blur(20px)',
+        position: 'relative',
       }}>
-        <div>
-          <div style={{ padding: '20px 16px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
-            <div style={{ width: 24, height: 24, borderRadius: 6, background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: '#fff' }}>M</div>
-            {sidebarOpen && <span style={{ fontFamily: 'var(--mm-font-heading)', fontWeight: 800, fontSize: 16 }}>MeetingMind</span>}
+        {/* Sidebar overlay for mobile */}
+        {sidebarOpen && (
+          <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 90 }} />
+        )}
+
+        {/* LEFT SIDEBAR */}
+        <aside style={{
+          width: 220,
+          minWidth: 220,
+          background: 'rgba(255,255,255,0.015)',
+          borderRight: '1px solid rgba(255,255,255,0.05)',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          overflowY: 'auto',
+        }}>
+          <div>
+            <div style={{ padding: '32px 24px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
+              <div style={{ width: 24, height: 24, borderRadius: 6, background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, color: '#fff' }}>M</div>
+              <span style={{ fontFamily: 'var(--mm-font-heading)', fontWeight: 800, fontSize: 16 }}>MeetingMind</span>
+            </div>
+
+            <nav style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {navItems.map(item => {
+                const active = location.pathname === item.to
+                return (
+                  <Link key={item.to} to={item.to} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '12px 18px',
+                    margin: '0 8px',
+                    textDecoration: 'none',
+                    color: active ? '#fff' : 'var(--mm-text-secondary)',
+                    background: active ? 'rgba(80,120,255,0.14)' : 'transparent',
+                    borderRadius: 12,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    transition: 'all var(--mm-duration-fast) var(--mm-ease-out)',
+                  }}
+                  onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
+                  onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+                  >
+                    <Icon d={item.icon} active={active} />
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </nav>
           </div>
 
-          <nav style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {navItems.map(item => {
-              const active = location.pathname === item.to
-              return (
-                <Link key={item.to} to={item.to} onClick={() => setSidebarOpen(false)} style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen ? '10px 16px' : '10px 0', textDecoration: 'none',
-                  color: active ? 'var(--mm-text-primary)' : 'var(--mm-text-secondary)',
-                  background: active ? (sidebarOpen ? 'rgba(38,182,255,0.12)' : 'transparent') : 'transparent',
-                  borderRadius: active && !sidebarOpen ? '50%' : (sidebarOpen ? 10 : 0),
-                  margin: active && !sidebarOpen ? '0 auto' : (sidebarOpen ? '0 8px' : 0),
-                  width: active && !sidebarOpen ? 36 : 'auto',
-                  height: active && !sidebarOpen ? 36 : 'auto',
-                  justifyContent: active && !sidebarOpen ? 'center' : 'flex-start',
-                  boxShadow: active ? '0 0 12px rgba(38,182,255,0.2)' : 'none',
-                  transition: 'all var(--mm-duration-fast) var(--mm-ease-out)',
-                }}>
-                  <Icon d={item.icon} active={active} />
-                  {sidebarOpen && <span style={{ fontSize: 'var(--mm-fs-body)', fontWeight: active ? 600 : 400 }}>{item.label}</span>}
-                </Link>
-              )
-            })}
-          </nav>
-        </div>
-
-        <div style={{ padding: '16px', borderTop: 'var(--mm-border-glass)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--mm-purple)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{initials}</div>
-            {sidebarOpen && (
-              <div style={{ fontSize: 13, fontWeight: 500, flex: 1 }}>
-                <div style={{ color: 'var(--mm-text-primary)', lineHeight: 1.2 }}>{displayName}</div>
-                <div style={{ fontSize: 11, color: 'var(--mm-text-muted)' }}>{planLabel}</div>
+          {/* Performance Card + User */}
+          <div>
+            <SidebarPerformanceCard />
+            <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--mm-purple)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{initials}</div>
+                <div style={{ fontSize: 13, fontWeight: 500, flex: 1 }}>
+                  <div style={{ color: 'var(--mm-text-primary)', lineHeight: 1.2 }}>{displayName}</div>
+                  <div style={{ fontSize: 11, color: 'var(--mm-text-muted)' }}>{planLabel}</div>
+                </div>
+                <button onClick={handleSignOut} style={{ background: 'none', border: 'none', color: 'var(--mm-text-muted)', fontSize: 10, cursor: 'pointer', padding: 0 }}>Sign out</button>
               </div>
-            )}
-            {sidebarOpen && (
-              <button onClick={handleSignOut} style={{ background: 'none', border: 'none', color: 'var(--mm-text-muted)', fontSize: 10, cursor: 'pointer', padding: 0 }}>Sign out</button>
-            )}
+              {!isPaid && (
+                <div style={{ marginTop: 12 }}>
+                  <Button onClick={handleUpgrade} variant="cyan" glow className="w-full">
+                    Upgrade to Pro →
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
-          {sidebarOpen && !isPaid && (
-            <div style={{ marginTop: 12 }}>
-              <Button onClick={handleUpgrade} variant="cyan" glow className="w-full">
-                Upgrade to Pro →
+        </aside>
+
+        {/* RIGHT CONTENT AREA */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+          {/* TOP HEADER */}
+          <header style={{
+            height: 56,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 24px',
+            borderBottom: '1px solid rgba(255,255,255,0.05)',
+            background: 'transparent',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'none', border: 'none', color: 'var(--mm-text-secondary)', fontSize: 20, cursor: 'pointer', padding: 0, lineHeight: 1 }}>☰</button>
+              <span style={{ fontFamily: 'var(--mm-font-heading)', fontWeight: 800, fontSize: 18, color: 'var(--mm-text-primary)' }}>MeetingMind</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              {/* AI Status Pill */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 20, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--mm-success)', boxShadow: '0 0 6px rgba(52,211,153,0.6)' }} />
+                <span style={{ fontSize: 11, color: 'var(--mm-success)', fontWeight: 500 }}>Intelligence Active</span>
+              </div>
+              {/* Plan Badge */}
+              <span style={{
+                background: isPaid ? 'rgba(38,182,255,0.12)' : 'rgba(255,255,255,0.06)',
+                borderRadius: 20,
+                padding: '4px 12px',
+                fontSize: 12,
+                color: isPaid ? 'var(--mm-cyan)' : 'var(--mm-text-secondary)',
+              }}>
+                {planLabel}
+              </span>
+              <Button variant="secondary" size="sm">
+                Share
+              </Button>
+              <Button onClick={() => navigate('/app')} variant="cyan" glow size="sm">
+                New Meeting
               </Button>
             </div>
-          )}
+          </header>
+
+          {/* BREADCRUMBS */}
+          <Breadcrumbs />
+
+          {/* PAGE CONTENT */}
+          <main style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
+            {children}
+          </main>
         </div>
-      </aside>
-
-      <div style={{ flex: 1, marginLeft: 64, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-        <header style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: 'var(--mm-border-glass)', background: 'rgba(12,16,36,0.5)', backdropFilter: 'blur(10px)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'none', border: 'none', color: 'var(--mm-text-secondary)', fontSize: 20, cursor: 'pointer', padding: 0, lineHeight: 1 }}>☰</button>
-            <span style={{ fontFamily: 'var(--mm-font-heading)', fontWeight: 800, fontSize: 18, color: 'var(--mm-text-primary)' }}>Intelligence Dashboard</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {/* AI Status Pill */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 20, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--mm-success)', boxShadow: '0 0 6px rgba(52,211,153,0.6)' }} />
-              <span style={{ fontSize: 11, color: 'var(--mm-success)', fontWeight: 500 }}>Intelligence Active</span>
-            </div>
-            <span style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: 'var(--mm-text-secondary)' }}>{planLabel}</span>
-            <Button onClick={() => navigate('/app')} variant="cyan" glow>
-              + New Meeting
-            </Button>
-          </div>
-        </header>
-
-        <Breadcrumbs />
-
-        <main style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
-          {children}
-        </main>
       </div>
     </div>
   )
