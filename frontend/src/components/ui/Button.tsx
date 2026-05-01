@@ -26,7 +26,7 @@ export function Button({
     border: 'none',
     borderRadius: 'var(--mm-radius-button)',
     cursor: disabled ? 'not-allowed' : 'pointer',
-    transition: 'all 0.2s',
+    transition: `all var(--mm-duration-fast) var(--mm-ease-out)`,
     opacity: disabled ? 0.5 : 1,
     display: 'inline-flex',
     alignItems: 'center',
@@ -35,25 +35,54 @@ export function Button({
   }
 
   const variantStyles: Record<string, React.CSSProperties> = {
-    primary:   { background: '#f59e0b', color: '#0a0e1a' },
-    secondary: { background: 'transparent', border: '1px solid #f59e0b', color: '#f59e0b' },
-    danger:    { background: '#ff4d4d', color: '#fff' },
-    cyan:      { background: 'linear-gradient(135deg, #00D4FF, #7B61FF)', color: '#0A0B1A' },
-    purple:    { background: '#7B61FF', color: '#fff' },
+    primary: {
+      background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))',
+      color: '#fff',
+    },
+    secondary: {
+      background: 'transparent',
+      border: '1px solid rgba(255,255,255,0.15)',
+      color: 'var(--mm-text-secondary)',
+    },
+    danger: {
+      background: 'var(--mm-danger)',
+      color: '#fff',
+    },
+    cyan: {
+      background: 'var(--mm-cyan)',
+      color: '#070B17',
+    },
+    purple: {
+      background: 'var(--mm-purple)',
+      color: '#fff',
+    },
   }
 
   const sizeStyles: Record<string, React.CSSProperties> = {
-    sm: { padding: '7px 16px', fontSize: 11 },
-    md: { padding: '12px 26px', fontSize: 13 },
-    lg: { padding: '16px 40px', fontSize: 15 },
+    sm: { padding: '7px 16px', fontSize: 12, height: 36 },
+    md: { padding: '12px 26px', fontSize: 14, height: 48 },
+    lg: { padding: '16px 40px', fontSize: 16, height: 56 },
   }
 
-  const glowStyles = glow ? { boxShadow: 'var(--mm-glow-cyan)' } : {}
+  const glowStyles: React.CSSProperties = glow
+    ? { boxShadow: 'var(--mm-glow-cyan)' }
+    : {}
 
-  const style = { ...baseStyles, ...variantStyles[variant], ...sizeStyles[size], ...glowStyles }
+  const style = {
+    ...baseStyles,
+    ...variantStyles[variant],
+    ...sizeStyles[size],
+    ...glowStyles,
+  }
 
   return (
-    <button type={type} onClick={onClick} disabled={disabled} style={style} className={className}>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      style={style}
+      className={`btn-hover ${className}`}
+    >
       {children}
     </button>
   )

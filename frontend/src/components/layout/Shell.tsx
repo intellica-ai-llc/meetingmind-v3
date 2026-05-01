@@ -27,7 +27,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const { isPaid, plan } = usePlan()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  // Direct Stripe checkout – no intermediate page
   const handleUpgrade = async () => {
     const priceId = import.meta.env.VITE_STRIPE_PRICE_PRO
     try {
@@ -48,21 +47,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const email = user?.email ?? ''
   const displayName = email.split('@')[0]
   const initials = displayName.substring(0, 2).toUpperCase()
-
-  // Plan badge label
   const planLabel = isPaid ? (plan === 'business' ? 'Business' : 'Pro') : 'Free'
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--mm-gradient-page)', fontFamily: 'var(--mm-font-body)', color: 'var(--mm-text-primary)' }}>
       {sidebarOpen && (
-        <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 90, display: 'block' }} />
+        <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 90 }} />
       )}
 
       <aside style={{
         width: sidebarOpen ? 240 : 64, minWidth: sidebarOpen ? 240 : 64,
-        background: 'var(--mm-bg-secondary)', borderRight: '1px solid rgba(255,255,255,0.06)',
+        background: 'var(--mm-bg-secondary)', borderRight: 'var(--mm-border-glass)',
         display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        transition: 'width 0.2s ease', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100, overflow: 'hidden',
+        transition: 'width var(--mm-duration-fast) var(--mm-ease-out)',
+        position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100, overflow: 'hidden',
       }}>
         <div>
           <div style={{ padding: '20px 16px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }} onClick={() => navigate('/dashboard')}>
@@ -77,9 +75,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 <Link key={item.to} to={item.to} onClick={() => setSidebarOpen(false)} style={{
                   display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', textDecoration: 'none',
                   color: active ? 'var(--mm-text-primary)' : 'var(--mm-text-secondary)',
-                  background: active ? 'rgba(0,212,255,0.08)' : 'transparent',
-                  borderLeft: active ? '3px solid var(--mm-cyan)' : '3px solid transparent',
-                  borderRadius: 0, transition: 'all 0.15s ease',
+                  background: active ? 'rgba(38,182,255,0.12)' : 'transparent',
+                  borderRadius: sidebarOpen ? 10 : '50%',
+                  margin: sidebarOpen ? '0 8px' : '0 auto',
+                  width: sidebarOpen ? 'auto' : 36,
+                  height: sidebarOpen ? 'auto' : 36,
+                  justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                  boxShadow: active ? '0 0 12px rgba(38,182,255,0.2)' : 'none',
+                  transition: 'all var(--mm-duration-fast) var(--mm-ease-out)',
                 }}>
                   <Icon d={item.icon} active={active} />
                   {sidebarOpen && <span style={{ fontSize: 'var(--mm-fs-body)', fontWeight: active ? 600 : 400 }}>{item.label}</span>}
@@ -89,7 +92,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
 
-        <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ padding: '16px', borderTop: 'var(--mm-border-glass)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--mm-purple)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{initials}</div>
             {sidebarOpen && (
@@ -102,8 +105,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
               <button onClick={handleSignOut} style={{ background: 'none', border: 'none', color: 'var(--mm-text-muted)', fontSize: 10, cursor: 'pointer', padding: 0 }}>Sign out</button>
             )}
           </div>
-
-          {/* Upgrade CTA – only visible for free users */}
           {sidebarOpen && !isPaid && (
             <button onClick={handleUpgrade} style={{ marginTop: 12, width: '100%', background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))', border: 'none', borderRadius: 8, padding: '8px 0', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
               Upgrade to Pro →
@@ -113,13 +114,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div style={{ flex: 1, marginLeft: 64, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-        <header style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(15,17,48,0.5)', backdropFilter: 'blur(10px)' }}>
+        <header style={{ height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', borderBottom: 'var(--mm-border-glass)', background: 'rgba(12,16,36,0.5)', backdropFilter: 'blur(10px)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: 'none', border: 'none', color: 'var(--mm-text-secondary)', fontSize: 20, cursor: 'pointer', padding: 0, lineHeight: 1 }}>☰</button>
             <span style={{ fontFamily: 'var(--mm-font-heading)', fontWeight: 800, fontSize: 18, color: 'var(--mm-text-primary)' }}>Intelligence Dashboard</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: 'var(--mm-text-secondary)' }}>{planLabel}</span>
+            {/* AI Status Pill */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 20, background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--mm-success)', boxShadow: '0 0 6px rgba(52,211,153,0.6)' }} />
+              <span style={{ fontSize: 11, color: 'var(--mm-success)', fontWeight: 500 }}>Intelligence Active</span>
+            </div>
+            <span style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: 'var(--mm-text-secondary)' }}>{planLabel}</span>
             <button onClick={() => navigate('/app')} style={{ background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))', border: 'none', borderRadius: 8, padding: '6px 14px', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ New Meeting</button>
           </div>
         </header>
