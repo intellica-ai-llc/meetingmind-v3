@@ -66,6 +66,43 @@ body::before {
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
 }
 
+/* ── Button hover lift ── */
+.btn-hover:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* ── Animations for dashboard and attention feed ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s var(--mm-ease-out) both;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideInLeft 0.35s var(--mm-ease-out) both;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -191,9 +228,3 @@ body::before {
 .workshop-card-desc { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 20px; line-height: 1.5; }
 .workshop-card-btn { border: 1px solid var(--color-accent-gold); color: var(--color-accent-gold); background: transparent; border-radius: 8px; padding: 10px 24px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
 .workshop-card-btn:hover { background: var(--color-accent-gold); color: #020b18; }
-
-/* ── Button hover lift ── */
-.btn-hover:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.1);
-}
