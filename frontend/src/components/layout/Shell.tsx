@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { usePlan } from '@/contexts/UserPlanProvider'
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs'
+import { Button } from '@/components/ui/Button'
 import { api } from '@/lib/api'
 
 const Icon = ({ d, active = false }: { d: string; active?: boolean }) => (
@@ -72,29 +73,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
             {navItems.map(item => {
               const active = location.pathname === item.to
               return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setSidebarOpen(false)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: sidebarOpen ? '10px 16px' : '10px 0',
-                    textDecoration: 'none',
-                    color: active ? 'var(--mm-text-primary)' : 'var(--mm-text-secondary)',
-                    background: active
-                      ? (sidebarOpen ? 'rgba(38,182,255,0.12)' : 'transparent')
-                      : 'transparent',
-                    borderRadius: active && !sidebarOpen ? '50%' : (sidebarOpen ? 10 : 0),
-                    margin: active && !sidebarOpen ? '0 auto' : (sidebarOpen ? '0 8px' : 0),
-                    width: active && !sidebarOpen ? 36 : 'auto',
-                    height: active && !sidebarOpen ? 36 : 'auto',
-                    justifyContent: active && !sidebarOpen ? 'center' : 'flex-start',
-                    boxShadow: active ? '0 0 12px rgba(38,182,255,0.2)' : 'none',
-                    transition: 'all var(--mm-duration-fast) var(--mm-ease-out)',
-                  }}
-                >
+                <Link key={item.to} to={item.to} onClick={() => setSidebarOpen(false)} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen ? '10px 16px' : '10px 0', textDecoration: 'none',
+                  color: active ? 'var(--mm-text-primary)' : 'var(--mm-text-secondary)',
+                  background: active ? (sidebarOpen ? 'rgba(38,182,255,0.12)' : 'transparent') : 'transparent',
+                  borderRadius: active && !sidebarOpen ? '50%' : (sidebarOpen ? 10 : 0),
+                  margin: active && !sidebarOpen ? '0 auto' : (sidebarOpen ? '0 8px' : 0),
+                  width: active && !sidebarOpen ? 36 : 'auto',
+                  height: active && !sidebarOpen ? 36 : 'auto',
+                  justifyContent: active && !sidebarOpen ? 'center' : 'flex-start',
+                  boxShadow: active ? '0 0 12px rgba(38,182,255,0.2)' : 'none',
+                  transition: 'all var(--mm-duration-fast) var(--mm-ease-out)',
+                }}>
                   <Icon d={item.icon} active={active} />
                   {sidebarOpen && <span style={{ fontSize: 'var(--mm-fs-body)', fontWeight: active ? 600 : 400 }}>{item.label}</span>}
                 </Link>
@@ -117,9 +107,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
             )}
           </div>
           {sidebarOpen && !isPaid && (
-            <button onClick={handleUpgrade} style={{ marginTop: 12, width: '100%', background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))', border: 'none', borderRadius: 8, padding: '8px 0', color: '#fff', fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
-              Upgrade to Pro →
-            </button>
+            <div style={{ marginTop: 12 }}>
+              <Button onClick={handleUpgrade} variant="cyan" glow className="w-full">
+                Upgrade to Pro →
+              </Button>
+            </div>
           )}
         </div>
       </aside>
@@ -137,7 +129,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
               <span style={{ fontSize: 11, color: 'var(--mm-success)', fontWeight: 500 }}>Intelligence Active</span>
             </div>
             <span style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: 'var(--mm-text-secondary)' }}>{planLabel}</span>
-            <button onClick={() => navigate('/app')} style={{ background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))', border: 'none', borderRadius: 8, padding: '6px 14px', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ New Meeting</button>
+            <Button onClick={() => navigate('/app')} variant="cyan" glow>
+              + New Meeting
+            </Button>
           </div>
         </header>
 

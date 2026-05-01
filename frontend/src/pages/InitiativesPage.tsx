@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { PlanGate } from '@/components/PlanGate'
+import { Button } from '@/components/ui/Button'
 
 interface Initiative {
   id: string
@@ -51,21 +52,9 @@ export function InitiativesPage() {
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '24px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <h1 style={{ fontSize: 'var(--mm-fs-title)', fontWeight: 800, color: 'var(--mm-text-primary)', margin: 0 }}>Initiatives</h1>
-          <button
-            onClick={handleCreate}
-            style={{
-              background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))',
-              border: 'none',
-              borderRadius: 8,
-              padding: '8px 18px',
-              color: '#fff',
-              fontWeight: 600,
-              fontSize: 13,
-              cursor: 'pointer',
-            }}
-          >
+          <Button onClick={handleCreate} variant="cyan" glow>
             + New Initiative
-          </button>
+          </Button>
         </div>
 
         {loading ? (
@@ -81,36 +70,12 @@ export function InitiativesPage() {
                 Group meetings into trackable company priorities. Each initiative gets a health score, timeline, and cross‑meeting intelligence.
               </p>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button
-                  onClick={handleCreate}
-                  style={{
-                    background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))',
-                    border: 'none',
-                    borderRadius: 8,
-                    padding: '10px 20px',
-                    color: '#fff',
-                    fontWeight: 600,
-                    fontSize: 14,
-                    cursor: 'pointer',
-                  }}
-                >
+                <Button onClick={handleCreate} variant="cyan" glow>
                   Create Your First Initiative
-                </button>
-                <button
-                  onClick={() => navigate('/meetings')}
-                  style={{
-                    background: 'transparent',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    borderRadius: 8,
-                    padding: '10px 20px',
-                    color: 'var(--mm-text-secondary)',
-                    fontWeight: 600,
-                    fontSize: 14,
-                    cursor: 'pointer',
-                  }}
-                >
+                </Button>
+                <Button onClick={() => navigate('/meetings')} variant="secondary">
                   Link Existing Meetings
-                </button>
+                </Button>
               </div>
             </div>
           </Card>

@@ -7,6 +7,7 @@ import { InitiativeGrid } from './InitiativeGrid'
 import { AttentionFeed } from './AttentionFeed'
 import { api } from '@/lib/api'
 import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 
 export function Dashboard() {
   const { user } = useAuth()
@@ -44,7 +45,6 @@ export function Dashboard() {
       .catch(() => {})
   }, [])
 
-  // Smart Launch Hero for first-time users
   if (totalMeetings === 0) {
     return (
       <div style={{ maxWidth: 700, margin: '0 auto', padding: '40px 20px', textAlign: 'center' }}>
@@ -56,40 +56,16 @@ export function Dashboard() {
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', marginBottom: 32 }}>
-          <button
-            onClick={() => navigate('/app')}
-            style={{
-              background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))',
-              border: 'none',
-              borderRadius: 12,
-              padding: '16px 32px',
-              color: '#fff',
-              fontWeight: 700,
-              fontSize: 16,
-              cursor: 'pointer',
-              width: '100%',
-              maxWidth: 340,
-            }}
-          >
-            + Start Live Meeting
-          </button>
-          <button
-            onClick={() => navigate('/app')}
-            style={{
-              background: 'transparent',
-              border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: 12,
-              padding: '16px 32px',
-              color: 'var(--mm-text-primary)',
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: 'pointer',
-              width: '100%',
-              maxWidth: 340,
-            }}
-          >
-            Upload Recording
-          </button>
+          <div style={{ width: '100%', maxWidth: 340 }}>
+            <Button onClick={() => navigate('/app')} variant="cyan" glow size="lg" className="w-full">
+              + Start Live Meeting
+            </Button>
+          </div>
+          <div style={{ width: '100%', maxWidth: 340 }}>
+            <Button onClick={() => navigate('/app')} variant="secondary" size="lg" className="w-full">
+              Upload Recording
+            </Button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap', fontSize: 13, color: 'var(--mm-text-muted)' }}>
@@ -111,7 +87,7 @@ export function Dashboard() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="animate-fade-in-up" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h2 style={{ fontSize: 'var(--mm-fs-title)', fontWeight: 800, color: 'var(--mm-text-primary)', margin: 0 }}>
             {getGreeting()}, {displayName}

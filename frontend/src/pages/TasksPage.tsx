@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { TaskCard } from '@/features/dashboard/TaskCard'
 
 interface Task {
@@ -63,21 +64,9 @@ export function TasksPage() {
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 style={{ fontSize: 'var(--mm-fs-title)', fontWeight: 800, color: 'var(--mm-text-primary)', margin: 0 }}>Tasks</h1>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          style={{
-            background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))',
-            border: 'none',
-            borderRadius: 8,
-            padding: '8px 18px',
-            color: '#fff',
-            fontWeight: 600,
-            fontSize: 13,
-            cursor: 'pointer',
-          }}
-        >
+        <Button onClick={() => setShowCreate(!showCreate)} variant="cyan" glow>
           + New Task
-        </button>
+        </Button>
       </div>
 
       {/* Search */}
@@ -113,8 +102,12 @@ export function TasksPage() {
               </select>
             </div>
             <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-              <button onClick={handleCreate} style={primaryBtnStyle}>Create Task</button>
-              <button onClick={() => setShowCreate(false)} style={secondaryBtnStyle}>Cancel</button>
+              <Button onClick={handleCreate} variant="cyan" glow>
+                Create Task
+              </Button>
+              <Button onClick={() => setShowCreate(false)} variant="secondary">
+                Cancel
+              </Button>
             </div>
           </Card>
         </div>
@@ -134,24 +127,15 @@ export function TasksPage() {
               MeetingMind extracts owners, deadlines, and action items from conversations.
             </p>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => navigate('/app')}
-                style={primaryBtnStyle}
-              >
+              <Button onClick={() => navigate('/app')} variant="cyan" glow>
                 Start Live Meeting
-              </button>
-              <button
-                onClick={() => navigate('/app')}
-                style={secondaryBtnStyle}
-              >
+              </Button>
+              <Button onClick={() => navigate('/app')} variant="secondary">
                 Upload Recording
-              </button>
-              <button
-                onClick={() => setShowCreate(true)}
-                style={{ ...secondaryBtnStyle, borderColor: 'rgba(255,255,255,0.25)' }}
-              >
+              </Button>
+              <Button onClick={() => setShowCreate(true)} variant="secondary">
                 Create Manual Task
-              </button>
+              </Button>
             </div>
           </div>
         </Card>
@@ -184,26 +168,4 @@ const inputStyle: React.CSSProperties = {
   padding: '8px 10px',
   color: 'var(--mm-text-primary)',
   fontSize: 13,
-}
-
-const primaryBtnStyle: React.CSSProperties = {
-  background: 'linear-gradient(135deg, var(--mm-cyan), var(--mm-purple))',
-  border: 'none',
-  borderRadius: 6,
-  padding: '10px 20px',
-  color: '#fff',
-  fontWeight: 600,
-  fontSize: 13,
-  cursor: 'pointer',
-}
-
-const secondaryBtnStyle: React.CSSProperties = {
-  background: 'transparent',
-  border: '1px solid rgba(255,255,255,0.15)',
-  borderRadius: 6,
-  padding: '10px 20px',
-  color: 'var(--mm-text-secondary)',
-  fontWeight: 600,
-  fontSize: 13,
-  cursor: 'pointer',
 }
