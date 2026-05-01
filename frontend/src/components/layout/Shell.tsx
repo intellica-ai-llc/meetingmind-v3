@@ -72,18 +72,29 @@ export function Shell({ children }: { children: React.ReactNode }) {
             {navItems.map(item => {
               const active = location.pathname === item.to
               return (
-                <Link key={item.to} to={item.to} onClick={() => setSidebarOpen(false)} style={{
-                  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', textDecoration: 'none',
-                  color: active ? 'var(--mm-text-primary)' : 'var(--mm-text-secondary)',
-                  background: active ? 'rgba(38,182,255,0.12)' : 'transparent',
-                  borderRadius: sidebarOpen ? 10 : '50%',
-                  margin: sidebarOpen ? '0 8px' : '0 auto',
-                  width: sidebarOpen ? 'auto' : 36,
-                  height: sidebarOpen ? 'auto' : 36,
-                  justifyContent: sidebarOpen ? 'flex-start' : 'center',
-                  boxShadow: active ? '0 0 12px rgba(38,182,255,0.2)' : 'none',
-                  transition: 'all var(--mm-duration-fast) var(--mm-ease-out)',
-                }}>
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setSidebarOpen(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: sidebarOpen ? '10px 16px' : '10px 0',
+                    textDecoration: 'none',
+                    color: active ? 'var(--mm-text-primary)' : 'var(--mm-text-secondary)',
+                    background: active
+                      ? (sidebarOpen ? 'rgba(38,182,255,0.12)' : 'transparent')
+                      : 'transparent',
+                    borderRadius: active && !sidebarOpen ? '50%' : (sidebarOpen ? 10 : 0),
+                    margin: active && !sidebarOpen ? '0 auto' : (sidebarOpen ? '0 8px' : 0),
+                    width: active && !sidebarOpen ? 36 : 'auto',
+                    height: active && !sidebarOpen ? 36 : 'auto',
+                    justifyContent: active && !sidebarOpen ? 'center' : 'flex-start',
+                    boxShadow: active ? '0 0 12px rgba(38,182,255,0.2)' : 'none',
+                    transition: 'all var(--mm-duration-fast) var(--mm-ease-out)',
+                  }}
+                >
                   <Icon d={item.icon} active={active} />
                   {sidebarOpen && <span style={{ fontSize: 'var(--mm-fs-body)', fontWeight: active ? 600 : 400 }}>{item.label}</span>}
                 </Link>
