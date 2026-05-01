@@ -5,7 +5,6 @@ import { UserPlanProvider } from '@/contexts/UserPlanProvider'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { Login } from '@/features/auth/Login'
 import { Register } from '@/features/auth/Register'
-import { Dashboard } from '@/features/dashboard/Dashboard'
 import { Landing } from '@/pages/Landing'
 import { AppPanel } from '@/components/app/AppPanel'
 import { RefundPolicy } from '@/pages/RefundPolicy'
@@ -24,6 +23,8 @@ import { InitiativeDetailPage } from '@/pages/InitiativeDetailPage'
 import { InitiativesPage } from '@/pages/InitiativesPage'
 import { Pricing } from '@/pages/Pricing'
 import { PostCheckoutPage } from '@/pages/PostCheckoutPage'
+import { DashboardShell } from '@/components/layout/DashboardShell'
+import { DashboardV5 } from '@/features/dashboard/DashboardV5'
 import './styles/globals.css'
 
 function App() {
@@ -44,8 +45,10 @@ function App() {
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/post-checkout" element={<ProtectedRoute><PostCheckoutPage /></ProtectedRoute>} />
 
-              {/* Authenticated pages with Shell */}
-              <Route path="/dashboard" element={<ProtectedRoute><Shell><Dashboard /></Shell></ProtectedRoute>} />
+              {/* New Dashboard */}
+              <Route path="/dashboard" element={<ProtectedRoute><DashboardShell><DashboardV5 /></DashboardShell></ProtectedRoute>} />
+
+              {/* Other authenticated pages with original Shell */}
               <Route path="/meetings" element={<ProtectedRoute><Shell><MeetingsPage /></Shell></ProtectedRoute>} />
               <Route path="/meetings/:id" element={<ProtectedRoute><Shell><MeetingDetailPage /></Shell></ProtectedRoute>} />
               <Route path="/tasks" element={<ProtectedRoute><Shell><TasksPage /></Shell></ProtectedRoute>} />
