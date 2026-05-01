@@ -1,34 +1,33 @@
-/* ── MEETINGMIND V4 DESIGN TOKENS ── */
+/* ── MEETINGMIND V4 DESIGN TOKENS (Premium) ── */
 :root {
   /* Depth layers */
-  --mm-bg-primary: #0A0B1A;
-  --mm-bg-secondary: #0F1130;
-  --mm-bg-elevated: #161842;
+  --mm-bg-primary: #070B17;
+  --mm-bg-secondary: #0C1024;
+  --mm-bg-elevated: #131837;
 
   /* Accents */
-  --mm-cyan: #00D4FF;
-  --mm-purple: #7B61FF;
-  --mm-success: #00C896;
-  --mm-warning: #FFB547;
-  --mm-danger: #FF4D6A;
-  --mm-low-priority: #4CAF50;
+  --mm-cyan: #26B6FF;
+  --mm-purple: #7A5CFF;
+  --mm-success: #34D399;
+  --mm-warning: #FBBF24;
+  --mm-danger: #F87171;
 
   /* Text */
-  --mm-text-primary: #FFFFFF;
-  --mm-text-secondary: #A0AEC0;
-  --mm-text-muted: #4A5568;
+  --mm-text-primary: #F1F5F9;
+  --mm-text-secondary: #94A3B8;
+  --mm-text-muted: #475569;
 
   /* Gradients */
-  --mm-gradient-page: linear-gradient(135deg, #0A0B1A 0%, #1A1060 50%, #0A0B1A 100%);
-  --mm-gradient-button: linear-gradient(135deg, #00D4FF, #7B61FF);
+  --mm-gradient-page: linear-gradient(135deg, #070B17 0%, #0C1024 50%, #070B17 100%);
+  --mm-gradient-button: linear-gradient(135deg, #26B6FF, #7A5CFF);
 
   /* Glows */
-  --mm-glow-cyan: 0 0 20px rgba(0, 212, 255, 0.3);
-  --mm-glow-purple: 0 0 20px rgba(123, 97, 255, 0.3);
+  --mm-glow-cyan: 0 0 18px rgba(38, 182, 255, 0.25);
+  --mm-glow-purple: 0 0 18px rgba(122, 92, 255, 0.25);
 
   /* Borders & Radius */
   --mm-border-glass: 1px solid rgba(255, 255, 255, 0.08);
-  --mm-radius-card: 12px;
+  --mm-radius-card: 18px;
   --mm-radius-button: 10px;
   --mm-radius-badge: 6px;
 
@@ -37,9 +36,18 @@
   --mm-font-body: 'Inter', system-ui, sans-serif;
   --mm-font-mono: 'JetBrains Mono', monospace;
 
-  --mm-fs-title: 28px;
-  --mm-fs-section: 20px;
+  /* Typographic scale (report) */
+  --mm-fs-title: 42px;
+  --mm-fs-section: 22px;
   --mm-fs-card-title: 16px;
   --mm-fs-body: 14px;
-  --mm-fs-label: 12px;
+  --mm-fs-label: 13px;
+  --mm-fs-micro: 12px;
+
+  /* Motion */
+  --mm-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --mm-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --mm-duration-fast: 180ms;
+  --mm-duration-normal: 280ms;
+  --mm-duration-slow: 400ms;
 }

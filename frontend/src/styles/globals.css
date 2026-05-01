@@ -1,9 +1,56 @@
-
 @import './design-tokens.css';
 @import './tokens.css';
 @import './animations.css';
 @import './responsive.css';
 @import './reduced-motion.css';
+
+/* ── Premium background additions ── */
+body {
+  background: var(--mm-bg-primary);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* Corner glow utility classes */
+.glow-top-right {
+  position: relative;
+}
+.glow-top-right::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  right: -200px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(38,182,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glow-bottom-left {
+  position: relative;
+}
+.glow-bottom-left::after {
+  content: '';
+  position: absolute;
+  bottom: -200px;
+  left: -200px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(122,92,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
 
 @tailwind base;
 @tailwind components;
