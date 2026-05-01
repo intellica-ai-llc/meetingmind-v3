@@ -52,6 +52,20 @@ body::before {
   z-index: 0;
 }
 
+/* ── Card hover lift utility ── */
+.card-hover {
+  position: relative;
+  transition: transform var(--mm-duration-fast) var(--mm-ease-out),
+              border-color var(--mm-duration-fast) var(--mm-ease-out),
+              box-shadow var(--mm-duration-fast) var(--mm-ease-out);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
