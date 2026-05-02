@@ -2,10 +2,11 @@ import { createMiddleware } from 'hono/factory'
 
 const requestCounts = new Map<string, { count: number; resetAt: number }>()
 
-// Paths that must never be rate‑limited (post‑checkout polling, subscription checks)
+// Paths that must never be rate‑limited (post‑checkout polling, subscription checks, cached calendar)
 const skipPaths = [
   '/api/payments/subscription',
   '/api/payments/verify-purchase',
+  '/api/calendar/upcoming',
 ]
 
 export const rateLimitMiddleware = createMiddleware(async (c, next) => {
@@ -18,8 +19,8 @@ export const rateLimitMiddleware = createMiddleware(async (c, next) => {
   }
 
   const now = Date.now()
-  const windowMs = 60 * 1000
-  const maxRequests = 30
+  const windowMs = 30 * 1000        // 30 seconds (burst‑friendly)
+  const maxRequests = 60            // 60 requests per window (was 30)
   const record = requestCounts.get(key)
 
   if (record && now < record.resetAt) {

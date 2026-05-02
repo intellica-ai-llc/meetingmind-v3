@@ -10,49 +10,69 @@ interface CalendarEvent {
   start: string
   end: string
   attendees: string[]
+  creator: string | null
+  description: string | null
+  location: string | null
+  hangoutLink: string | null
+  conferenceData: any
 }
 
 export function UpcomingMeetingsPanel() {
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [connected, setConnected] = useState<boolean | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [retrying, setRetrying] = useState(false)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    api.get('/calendar/upcoming')
-      .then(res => {
-        setEvents(res.data.events || [])
-        setConnected(res.data.connected ?? null)
-      })
-      .catch(() => {})
-  }, [])
-
-  const groupEvents = () => {
-    const now = new Date()
-    const today: CalendarEvent[] = []
-    const tomorrow: CalendarEvent[] = []
-    const thisWeek: CalendarEvent[] = []
-    const later: CalendarEvent[] = []
-
-    events.forEach(e => {
-      const date = new Date(e.start)
-      const diffDays = (date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-      if (diffDays < 0) return
-      if (date.toDateString() === now.toDateString()) today.push(e)
-      else if (diffDays < 1 && date.getDate() === now.getDate() + 1) tomorrow.push(e)
-      else if (diffDays < 7) thisWeek.push(e)
-      else later.push(e)
-    })
-    return { today, tomorrow, thisWeek, later }
+  const fetchEvents = async () => {
+    setLoading(true)
+    setError(false)
+    try {
+      const res = await api.get('/calendar/upcoming')
+      setEvents(res.data.events || [])
+      setConnected(res.data.connected ?? null)
+    } catch (err) {
+      console.error('UpcomingMeetingsPanel fetch error:', err)
+      setError(true)
+    } finally {
+      setLoading(false)
+      setRetrying(false)
+    }
   }
 
-  const handlePrepare = (event: CalendarEvent) => {
-    const params = new URLSearchParams({
-      prepare: 'true',
-      title: event.title,
-      date: new Date(event.start).toISOString(),
-      attendees: event.attendees.join(','),
-    })
-    navigate(`/app?${params.toString()}`)
+  useEffect(() => {
+    fetchEvents()
+  }, [])
+
+  const handleRetry = () => {
+    setRetrying(true)
+    fetchEvents()
+  }
+
+  if (loading || retrying) {
+    return (
+      <Card variant="glass" padding="md">
+        <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--mm-text-primary)', marginBottom: 12 }}>Upcoming</h3>
+        <p style={{ color: 'var(--mm-text-muted)', fontSize: 14 }}>
+          {retrying ? 'Retrying…' : 'Loading upcoming events…'}
+        </p>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card variant="glass" padding="md">
+        <h3 style={{ fontSize: 16, fontWeight: 600, color: 'var(--mm-text-primary)', marginBottom: 12 }}>Upcoming</h3>
+        <p style={{ color: 'var(--mm-text-secondary)', fontSize: 14, marginBottom: 12 }}>
+          Couldn't load upcoming meetings.
+        </p>
+        <Button onClick={handleRetry} variant="secondary" size="sm">
+          Retry
+        </Button>
+      </Card>
+    )
   }
 
   if (connected === false) {
@@ -69,8 +89,34 @@ export function UpcomingMeetingsPanel() {
     )
   }
 
-  const groups = groupEvents()
+  const now = new Date()
+  const today: CalendarEvent[] = []
+  const tomorrow: CalendarEvent[] = []
+  const thisWeek: CalendarEvent[] = []
+  const later: CalendarEvent[] = []
+
+  events.forEach(e => {
+    const date = new Date(e.start)
+    const diffDays = (date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    if (diffDays < 0) return
+    if (date.toDateString() === now.toDateString()) today.push(e)
+    else if (diffDays < 1 && date.getDate() === now.getDate() + 1) tomorrow.push(e)
+    else if (diffDays < 7) thisWeek.push(e)
+    else later.push(e)
+  })
+
+  const groups = { today, tomorrow, thisWeek, later }
   const hasEvents = events.length > 0
+
+  const handlePrepare = (event: CalendarEvent) => {
+    const params = new URLSearchParams({
+      prepare: 'true',
+      title: event.title,
+      date: new Date(event.start).toISOString(),
+      attendees: event.attendees.join(','),
+    })
+    navigate(`/app?${params.toString()}`)
+  }
 
   return (
     <Card variant="glass" padding="md">
