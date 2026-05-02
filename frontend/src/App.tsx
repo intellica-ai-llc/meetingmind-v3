@@ -6,7 +6,7 @@ import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { Login } from '@/features/auth/Login'
 import { Register } from '@/features/auth/Register'
 import { Landing } from '@/pages/Landing'
-import { AppPanel } from '@/components/app/AppPanel'
+import { AppShell } from '@/components/layout/AppShell'
 import { RefundPolicy } from '@/pages/RefundPolicy'
 import { TermsOfService } from '@/pages/TermsOfService'
 import { PrivacyPolicy } from '@/pages/PrivacyPolicy'
@@ -37,7 +37,7 @@ function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/app" element={<ProtectedRoute><div className="min-h-screen bg-meetingmind-bg p-4"><AppPanel /></div></ProtectedRoute>} />
+              <Route path="/app" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
               <Route path="/refund-policy" element={<RefundPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />

@@ -228,6 +228,95 @@ app.get('/:id/health', async (c) => {
   return c.json({ snapshots: snapshots || [] })
 })
 
+// ── Get open items for a specific initiative (NEW) ─────────
+app.get('/:id/open-items', async (c) => {
+  const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
+  const user = c.get('user')
+  const initiativeId = c.req.param('id')
+
+  // Verify ownership
+  const { data: initiative } = await supabase
+    .from('initiatives')
+    .select('id, user_id')
+    .eq('id', initiativeId)
+    .eq('user_id', user.id)
+    .single()
+  if (!initiative) return c.json({ error: 'Initiative not found' }, 404)
+
+  // Get membership IDs for this initiative
+  const { data: members } = await supabase
+    .from('initiative_memberships')
+    .select('meeting_id, task_id, thread_id')
+    .eq('initiative_id', initiativeId)
+
+  const meetingIds = members?.filter(m => m.meeting_id).map(m => m.meeting_id) || []
+  const taskIds = members?.filter(m => m.task_id).map(m => m.task_id) || []
+  const threadIds = members?.filter(m => m.thread_id).map(m => m.thread_id) || []
+
+  // Open tasks (not completed)
+  let openTasks: any[] = []
+  if (taskIds.length) {
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('*')
+      .in('id', taskIds)
+      .neq('status', 'completed')
+      .order('due_date', { ascending: true })
+    openTasks = tasks || []
+  }
+
+  // Unresolved threads
+  let unresolvedThreads: any[] = []
+  if (threadIds.length) {
+    const { data: threads } = await supabase
+      .from('unresolved_threads')
+      .select('*')
+      .in('id', threadIds)
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+    unresolvedThreads = threads || []
+  }
+
+  // Recent decisions from linked meetings
+  let recentDecisions: string[] = []
+  if (meetingIds.length) {
+    const { data: meetings } = await supabase
+      .from('meetings')
+      .select('decisions')
+      .in('id', meetingIds)
+      .order('created_at', { ascending: false })
+      .limit(3)
+    if (meetings) {
+      meetings.forEach(m => {
+        if (m.decisions?.length) {
+          recentDecisions = [...recentDecisions, ...m.decisions]
+        }
+      })
+      recentDecisions = recentDecisions.slice(0, 5)
+    }
+  }
+
+  // Last meeting summary for context
+  let lastMeetingSummary: string | null = null
+  if (meetingIds.length) {
+    const { data: lastMeeting } = await supabase
+      .from('meetings')
+      .select('summary')
+      .in('id', meetingIds)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+    lastMeetingSummary = lastMeeting?.summary || null
+  }
+
+  return c.json({
+    openTasks,
+    unresolvedThreads,
+    recentDecisions,
+    lastMeetingSummary,
+  })
+})
+
 // ── Suggest initiatives from a meeting (Pro) ───────────────
 app.post('/suggest', requirePlan('pro'), async (c) => {
   const groq = new Groq({ apiKey: c.env.GROQ_API_KEY_1 })
