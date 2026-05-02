@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useApp } from '@/contexts/AppContext'
 import { usePlan } from '@/contexts/UserPlanProvider'
 import { PrepareHeader } from '@/features/console/PrepareHeader'
@@ -7,14 +8,17 @@ import { SpeakerCard } from '@/features/console/SpeakerCard'
 import { AgendaBuilder } from '@/features/console/AgendaBuilder'
 import { OpenItemsCard } from '@/features/console/OpenItemsCard'
 
-// ── Read calendar prepare params synchronously ──────────────
 function readPrepareParams(): { title: string; date: string; attendees: string[] } | null {
-  const params = new URLSearchParams(window.location.search)
-  if (params.get('prepare') !== 'true') return null
-  return {
-    title: params.get('title') || '',
-    date: params.get('date') || '',
-    attendees: (params.get('attendees') || '').split(',').map(a => a.trim()).filter(Boolean),
+  try {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('prepare') !== 'true') return null
+    return {
+      title: params.get('title') || '',
+      date: params.get('date') || '',
+      attendees: (params.get('attendees') || '').split(',').map(a => a.trim()).filter(Boolean),
+    }
+  } catch {
+    return null
   }
 }
 
@@ -61,22 +65,21 @@ export function RecordingStep() {
   } = useApp()
 
   const { plan } = usePlan()
+  const [searchParams] = useSearchParams()
 
-  // ── Synchronous initial read ────────────────────────────
+  // ── Initial state from URL (first mount) ────────────────
   const initialParams = readPrepareParams()
   const [prepareTitle, setPrepareTitle] = useState<string>(initialParams?.title || '')
-  const prepareDate = initialParams?.date || ''
-  const prepareAttendees = initialParams?.attendees || []
+  const [prepareDate, setPrepareDate] = useState<string>(initialParams?.date || '')
+  const [prepareAttendees, setPrepareAttendees] = useState<string[]>(initialParams?.attendees || [])
   const [showQuickRecord, setShowQuickRecord] = useState(false)
-  const processedRef = useRef(false)
+  const cleanedRef = useRef(false)
   const isFree = plan === 'free' || !plan
 
-  // ── Process URL once, then clean it ──────────────────────
+  // ── Clean URL once AND sync AppContext on first mount ────
   useEffect(() => {
-    if (processedRef.current) return
-    processedRef.current = true
-
-    if (initialParams) {
+    if (initialParams && !cleanedRef.current) {
+      cleanedRef.current = true
       if (initialParams.title) setMeetingTitle(initialParams.title)
       if (initialParams.date) {
         setMeetingDate(new Date(initialParams.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))
@@ -84,6 +87,26 @@ export function RecordingStep() {
       window.history.replaceState({}, document.title, '/app')
     }
   }, [initialParams, setMeetingTitle, setMeetingDate])
+
+  // ── Re‑sync when URL changes (same‑component navigation) ─
+  useEffect(() => {
+    const prepare = searchParams.get('prepare')
+    if (prepare === 'true') {
+      const title = searchParams.get('title') || ''
+      const date = searchParams.get('date') || ''
+      const attendees = (searchParams.get('attendees') || '').split(',').map(a => a.trim()).filter(Boolean)
+
+      setPrepareTitle(title)
+      setPrepareDate(date)
+      setPrepareAttendees(attendees)
+      setShowQuickRecord(false)
+
+      if (title) setMeetingTitle(title)
+      if (date) {
+        setMeetingDate(new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))
+      }
+    }
+  }, [searchParams, setMeetingTitle, setMeetingDate])
 
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60).toString().padStart(2, '0')
