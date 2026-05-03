@@ -8,7 +8,7 @@ import { acquireJobSlot, releaseJobSlot } from './concurrency'
  */
 export async function registerWatchChannel(env: any, userId: string, accessToken: string) {
   const channelId = crypto.randomUUID?.() || `channel-${Date.now()}-${Math.random().toString(36).slice(2)}`
-  const webhookUrl = 'https://meetingmind-api-production.intellicaai-ai.workers.dev/api/calendar/webhook'
+  const webhookUrl = 'https://api.meeting-mind.com/api/calendar/webhook'
   const expiration = new Date()
   expiration.setDate(expiration.getDate() + 7)  // Channel expires after 7 days (renewal needed)
 

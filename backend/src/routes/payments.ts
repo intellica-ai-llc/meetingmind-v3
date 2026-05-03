@@ -78,7 +78,7 @@ app.post('/create-portal-session', async (c) => {
 
   const session = await stripe.billingPortal.sessions.create({
     customer: profile.stripe_customer_id,
-    return_url: returnUrl || 'https://meetingmind-v3.pages.dev/dashboard',
+   return_url: returnUrl || 'https://meeting-mind.com/dashboard',
   })
 
   return c.json({ url: session.url })

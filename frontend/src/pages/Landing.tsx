@@ -18,7 +18,7 @@ export function Landing() {
       const { data: { session } } = await supabase.auth.getSession()
       const token = session?.access_token
 
-      const response = await fetch('https://meetingmind-api-production.intellicaai-ai.workers.dev/api/payments/create-checkout-session', {
+      const response = await fetch('https://api.meeting-mind.com/api/payments/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

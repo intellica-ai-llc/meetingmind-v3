@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://meetingmind-v3.pages.dev/dashboard'
+        redirectTo: 'https://meeting-mind.com/dashboard'
       }
     })
     if (error) throw error

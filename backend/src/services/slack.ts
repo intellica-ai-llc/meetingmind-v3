@@ -56,7 +56,7 @@ export async function sendSlackSummary(env: any, userId: string, meetingTitle: s
           {
             type: 'button',
             text: { type: 'plain_text', text: 'View Full Meeting', emoji: true },
-            url: 'https://meetingmind-v3.pages.dev/dashboard',
+            url: 'https://meeting-mind.com/dashboard',
           },
         ],
       },
