@@ -11,12 +11,17 @@ interface TrendChartProps {
 }
 
 export function TrendChart({ data, color = '#00d4ff', height = 100, width = 200 }: TrendChartProps) {
-  const valid = data.filter(p => p.value !== null) as { date: string; value: number }[]
+  // Filter out nulls and sort ascending by date so X coordinates go left → right
+  const valid = data
+    .filter(p => p.value !== null)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) as { date: string; value: number }[]
+
   if (valid.length < 2) return <div style={{ color: 'var(--mm-text-muted)', fontSize: 12 }}>Not enough data to chart.</div>
 
   const maxVal = Math.max(...valid.map(p => p.value), 1)
-  const points = valid.map(p => ({
-    x: ((new Date(p.date).getTime() - new Date(valid[0].date).getTime()) / (24 * 3600 * 1000)) * (width / Math.max(valid.length - 1, 1)),
+  const points = valid.map((p, i) => ({
+    // i / (length-1) gives evenly spaced horizontal positions, works regardless of date gaps
+    x: (i / Math.max(valid.length - 1, 1)) * width,
     y: height - (p.value / maxVal) * height,
     date: new Date(p.date).toLocaleDateString(),
     value: p.value,

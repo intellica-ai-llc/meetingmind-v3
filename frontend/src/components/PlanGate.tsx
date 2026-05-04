@@ -10,16 +10,8 @@ interface PlanGateProps {
 }
 
 export function PlanGate({ feature, fallbackMessage, children }: PlanGateProps) {
-  const { plan, status, loading } = usePlan()
+  const { plan, status } = usePlan()
   const navigate = useNavigate()
-
-  if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: 40, color: 'var(--mm-text-secondary)' }}>
-        Checking access...
-      </div>
-    )
-  }
 
   const requiredPlan = FEATURE_REQUIRED_PLAN[feature]
   const hasAccess =

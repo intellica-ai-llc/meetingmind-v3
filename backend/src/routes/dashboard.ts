@@ -52,12 +52,12 @@ app.get('/kpi', async (c) => {
   const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
   const userId = user.id
 
-  // Last 5 meetings for sparkline & trends
+  // Last 5 meetings for sparkline & trends — ordered by meeting_date, not created_at
   const { data: meetings } = await supabase
     .from('meetings')
     .select('*')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false })
+    .order('meeting_date', { ascending: false })
     .limit(5)
 
   if (!meetings || meetings.length === 0) {
@@ -122,7 +122,7 @@ app.get('/kpi', async (c) => {
 
   return c.json({
     overallScore, scoreTrend,
-    talkRatio: null,   // future: derive from talk_time
+    talkRatio: null,
     sentiment, sentimentTrend,
     engagementRate, engagementTrend,
     avgScore, recentScores,
