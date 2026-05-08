@@ -59,31 +59,35 @@ app.post('/transcribe', async (c) => {
       return c.json({ error: 'No audio file provided' }, 400)
     }
 
-    // Optional keyterms – a comma-separated or JSON string of important words (e.g., attendee names)
     const keytermsRaw = formData.get('keyterms')
     let keyterms: string[] | undefined
     if (keytermsRaw && typeof keytermsRaw === 'string') {
       try {
-        // Try parsing as JSON array
         keyterms = JSON.parse(keytermsRaw)
         if (!Array.isArray(keyterms)) keyterms = [keytermsRaw]
       } catch {
-        // Fallback: treat as comma-separated
         keyterms = keytermsRaw.split(',').map(k => k.trim()).filter(k => k.length)
       }
     }
 
-    // 4. Submit to AssemblyAI
+    // 4. Submit to AssemblyAI (CORRECTED: speech_model singular)
     const blob = new Blob([await audioFile.arrayBuffer()], { type: audioFile.type || 'audio/webm' })
     const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
-    const transcript = await client.transcripts.submit({
+
+    const transcriptionParams: any = {
       audio: blob,
       speaker_labels: true,
-      speech_models: ['universal'],
+      speech_model: 'universal',   // ✅ FIXED: was speech_models (invalid array)
       punctuate: true,
       format_text: true,
-      ...(keyterms && keyterms.length ? { keyterms } : {}),
-    })
+    }
+    if (keyterms && keyterms.length) {
+      transcriptionParams.keyterms = keyterms
+    }
+
+    console.log('AssemblyAI transcription params:', { ...transcriptionParams, audio: '<blob redacted>' })
+
+    const transcript = await client.transcripts.submit(transcriptionParams)
 
     // 5. Return job_id immediately
     return c.json({ job_id: transcript.id })
