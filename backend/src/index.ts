@@ -52,4 +52,9 @@ app.route('/api', coachRoutes)
 app.route('/api/payments', verifyPurchaseRoutes)
 app.route('/api', accessCodeRoutes)
 
+// Catch‑all for unknown routes – returns 404 instead of default empty 404
+app.notFound((c) => {
+  return c.json({ error: 'Not found' }, 404)
+})
+
 export default app

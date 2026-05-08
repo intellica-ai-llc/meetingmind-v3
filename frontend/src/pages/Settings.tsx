@@ -57,7 +57,7 @@ export function Settings() {
       alert('Google Client ID not configured.')
       return
     }
-    const redirectUri = 'https://meetingmind-api-production.intellicaai-ai.workers.dev/api/calendar/callback'
+    const redirectUri = 'https://api.meeting-mind.com/api/calendar/callback'
     const scope = 'https://www.googleapis.com/auth/calendar.events.readonly'
     const state = user?.id || ''
     const url = `https://accounts.google.com/o/oauth2/v2/auth?` +
