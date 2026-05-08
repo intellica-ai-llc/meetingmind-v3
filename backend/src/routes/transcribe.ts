@@ -70,12 +70,12 @@ app.post('/transcribe', async (c) => {
       }
     }
 
-    // 4. Submit to AssemblyAI (CORRECTED: speech_model singular)
-    const blob = new Blob([await audioFile.arrayBuffer()], { type: audioFile.type || 'audio/webm' })
+    // 4. Submit to AssemblyAI (Buffer + fixed speech_model)
+    const buffer = Buffer.from(await audioFile.arrayBuffer())
     const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
 
     const transcriptionParams: any = {
-      audio: blob,
+      audio: buffer,                // ✅ FIXED: was `blob` (undefined)
       speaker_labels: true,
       speech_model: 'universal',   // ✅ FIXED: was speech_models (invalid array)
       punctuate: true,
@@ -85,7 +85,7 @@ app.post('/transcribe', async (c) => {
       transcriptionParams.keyterms = keyterms
     }
 
-    console.log('AssemblyAI transcription params:', { ...transcriptionParams, audio: '<blob redacted>' })
+    console.log('AssemblyAI transcription params:', { ...transcriptionParams, audio: '<buffer redacted>' })
 
     const transcript = await client.transcripts.submit(transcriptionParams)
 
