@@ -3,7 +3,7 @@ import Groq from 'groq-sdk'
 
 const app = new Hono()
 
-// ── Optimized system prompt with few‑shot example ─────────────────
+// ── Aggressive system prompt – never gives up, extracts fragments ──
 const SYSTEM_PROMPT = `You are an expert meeting analyst. You will receive a transcript of a conversation (in English) and must produce a JSON object with the exact keys listed below.
 
 CORE RULES:
@@ -18,7 +18,9 @@ CORE RULES:
 
 3. **Always produce a valid JSON object.** Even if the transcript is garbled or extremely short, write the best possible summary and fill other keys with empty arrays or neutral values where truly absent. Never refuse.
 
-4. **Be precise and specific.** Include names, numbers, deadlines, direct quotes, and speaker identifiers when present.
+4. **If the transcript is mostly unintelligible, write a summary that captures any discernible words or topics.** Do NOT simply state that the transcript is unclear; instead, list any words or fragments you recognised. For example: "Only a few words were intelligible: 'budget', 'deadline', 'Alice'. No full sentences could be understood." Then fill other keys with empty arrays.
+
+5. **Be precise and specific.** Include names, numbers, deadlines, direct quotes, and speaker identifiers when present.
 
 KEYS (with types and examples):
 - "summary": string – proportional, see Rule 1.
@@ -60,57 +62,57 @@ EXAMPLE OUTPUT (for a short meeting):
 
 Return ONLY the JSON object, no other text.`
 
-// ── Threshold for using full transcript directly (no summarisation) ──
-// Llama 3.3 128k context can handle very long transcripts, so we always
-// pass the whole transcript.  No information is lost.
-const MAX_TRANSCRIPT_LENGTH = 100000 // characters (~25k tokens); well within 128k
+const MAX_TRANSCRIPT_LENGTH = 100000
 
-// ── Robust JSON extraction with fallback ──────────────────────────
+// ── Robust JSON extraction ──────────────────────────────────────────
 function parseGroqJSON(raw: string | null): Record<string, any> {
   if (!raw) return {}
 
-  // Try direct parse
-  try {
-    return JSON.parse(raw)
-  } catch {}
+  try { return JSON.parse(raw) } catch {}
 
-  // Try extracting from markdown code block (```json ... ```)
   const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/)
   if (codeBlockMatch) {
-    try {
-      return JSON.parse(codeBlockMatch[1])
-    } catch {}
+    try { return JSON.parse(codeBlockMatch[1]) } catch {}
   }
 
-  // Try extracting first JSON object/array in the text
   const jsonMatch = raw.match(/\{[\s\S]*\}/)
   if (jsonMatch) {
-    try {
-      return JSON.parse(jsonMatch[0])
-    } catch {}
+    try { return JSON.parse(jsonMatch[0]) } catch {}
   }
 
-  // Return empty object – will trigger defaults
   return {}
 }
 
-// ── Crippled output detection (expanded) ──────────────────────────
+// ── Crippled output detection – now catches lazy/disclaimer summaries ──
 function isOutputCrippled(result: Record<string, any>, transcriptLength: number): boolean {
-  // 1. Summary missing or placeholder
-  if (!result || typeof result.summary !== 'string' || result.summary.trim() === '' || result.summary === 'No summary available.') {
-    return true
-  }
-  // 2. Too many empty fields for a non‑trivial transcript
-  if (transcriptLength > 500) {
-    const criticalEmptyFields = ['decisions', 'action_items', 'key_topics', 'key_quotes']
-      .filter((field) => !result[field] || (Array.isArray(result[field]) && result[field].length === 0))
-    // If 3 or more are empty, likely a poor extraction
-    if (criticalEmptyFields.length >= 3) return true
-  }
+  if (!result || typeof result.summary !== 'string' || result.summary.trim() === '') return true
+
+  const summaryLower = result.summary.toLowerCase()
+  const disclaimerPhrases = [
+    'incomplete and unclear',
+    'too brief or unclear',
+    'could not be understood',
+    'unintelligible',
+    'garbled transcript',
+    'cannot analyze',
+    'no meaningful',
+    'only a few words',
+    'unclear transcript',
+  ]
+  const isDisclaimer = disclaimerPhrases.some(phrase => summaryLower.includes(phrase))
+
+  // If transcript is non‑trivial but the summary is just a disclaimer, it's crippled
+  if (transcriptLength > 500 && isDisclaimer) return true
+
+  // Also crippled if too many expected fields are empty
+  const criticalEmptyFields = ['decisions', 'action_items', 'key_topics', 'key_quotes']
+    .filter(f => !result[f] || (Array.isArray(result[f]) && result[f].length === 0))
+  if (transcriptLength > 500 && criticalEmptyFields.length >= 3) return true
+
   return false
 }
 
-// ── Core extraction with retry capability ─────────────────────────
+// ── Core extraction with retry ──────────────────────────────────────
 async function extractWithRetry(
   groq: Groq,
   transcript: string,
@@ -125,15 +127,14 @@ async function extractWithRetry(
     { role: 'user', content: `Meeting Title: ${title}\nMeeting Date: ${date}\n\nTRANSCRIPT:\n${transcript}` },
   ]
 
-  // On retry, inject a stronger nudge
   if (retryCount > 0) {
+    // Strong nudge: never repeat a disclaimer
     messages.splice(1, 0, {
       role: 'system',
-      content: 'CRITICAL: Your previous output was incomplete. Please re‑read the transcript carefully and produce a fully populated JSON object. Ensure the summary is a meaningful paragraph, not a placeholder, and that all arrays contain at least one item where evidence exists.',
+      content: `CRITICAL: Your previous output was a generic disclaimer. You MUST produce a genuine analysis. Even if the transcript is noisy, extract all identifiable words, names, or topics. Do not repeat the disclaimer. Fill all available fields with whatever evidence you find; if none, use empty arrays.`,
     })
   }
 
-  // Dynamic max_tokens: prevent output truncation for long transcripts
   const estimatedTokens = Math.min(8000, Math.max(2000, Math.ceil(transcript.length / 2)))
 
   const response = await groq.chat.completions.create({
@@ -148,7 +149,6 @@ async function extractWithRetry(
 
   const parsed = parseGroqJSON(raw)
 
-  // Apply defaults for truly missing keys (not for empty arrays/strings that were intentional)
   const defaults: Record<string, any> = {
     summary: 'No summary available.',
     decisions: [],
@@ -157,24 +157,21 @@ async function extractWithRetry(
     parking_lot: [],
     key_topics: [],
     key_quotes: [],
-    sentiment: 'Neutral',          // safe fallback
+    sentiment: 'Neutral',
     sentiment_reason: '',
-    effectiveness_score: null,     // null = not assessed
+    effectiveness_score: null,
     effectiveness_reason: '',
     next_agenda: [],
     risk_flags: [],
-    meeting_type: null,            // null = not assessed
+    meeting_type: null,
   }
 
   for (const [key, defaultVal] of Object.entries(defaults)) {
     if (!(key in parsed) || parsed[key] === null || parsed[key] === undefined) {
-      // Only overwrite with default if the key is entirely absent
-      // But if the model set it to an empty array/string, keep it.
       parsed[key] = defaultVal
     }
   }
 
-  // Coerce effectiveness_score to null if it's not a number
   if (parsed.effectiveness_score !== null && typeof parsed.effectiveness_score !== 'number') {
     parsed.effectiveness_score = null
   }
@@ -199,7 +196,6 @@ app.post('/analyze', async (c) => {
     return c.json({ error: 'Transcript is empty. Cannot analyze.' }, 400)
   }
 
-  // Build named transcript: use speaker_map if available, else fallback to speaker label directly
   const namedLines = utterances.map((utt: any) => {
     const name = speaker_map[utt.speaker] || utt.speaker || 'Unknown'
     return `${name}: ${utt.text}`
@@ -213,42 +209,30 @@ app.post('/analyze', async (c) => {
   console.log('Transcript length:', transcript.length)
   console.log('Transcript preview:', transcript.substring(0, 300))
 
-  // Hard limit for safety (100k chars ~25k tokens)
   if (transcript.length > MAX_TRANSCRIPT_LENGTH) {
-    return c.json({
-      error: 'Transcript too long for a single analysis. Please split into smaller segments.',
-    }, 413)
+    return c.json({ error: 'Transcript too long for a single analysis. Please split into smaller segments.' }, 413)
   }
 
   try {
-    // First attempt
     let result = await extractWithRetry(groq, transcript, meeting_context)
 
-    // Retry if output looks crippled
     if (isOutputCrippled(result, transcript.length)) {
       console.log('First extraction crippled, retrying with stronger prompt...')
       try {
         result = await extractWithRetry(groq, transcript, meeting_context, 1)
       } catch (retryErr) {
         console.error('Retry failed:', retryErr)
-        // Fall through with the (maybe crippled) result rather than crashing
       }
     }
 
     return c.json(result)
   } catch (error: any) {
     console.error('Analysis pipeline error:', error)
-    return c.json(
-      {
-        error: 'Analysis failed',
-        message: error?.message || String(error),
-      },
-      500
-    )
+    return c.json({ error: 'Analysis failed', message: error?.message || String(error) }, 500)
   }
 })
 
-// ── Draft email (unchanged logic, lightly polished) ───────────────
+// ── Draft email (unchanged) ─────────────────────────────────────────
 app.post('/draft-email', async (c) => {
   const groq = new Groq({ apiKey: c.env.GROQ_API_KEY_1 })
 
@@ -286,13 +270,7 @@ app.post('/draft-email', async (c) => {
     return c.json({ email: emailText })
   } catch (error: any) {
     console.error('Draft email error:', error)
-    return c.json(
-      {
-        error: 'Email draft failed',
-        message: error?.message || String(error),
-      },
-      500
-    )
+    return c.json({ error: 'Email draft failed', message: error?.message || String(error) }, 500)
   }
 })
 
