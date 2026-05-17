@@ -77,12 +77,12 @@ app.post('/transcribe', async (c) => {
     const transcript = await client.transcripts.submit({
       audio: blob,
       speaker_labels: true,
-      speech_models: ['universal'],   // ✅ original working parameter
+      speech_models: ['universal'],
+      language_code: 'en',          // ✅ FORCE ENGLISH
       punctuate: true,
       format_text: true,
       ...(keyterms && keyterms.length ? { keyterms } : {}),
     })
-
     // 5. Return job_id immediately
     return c.json({ job_id: transcript.id })
   } catch (error: any) {
