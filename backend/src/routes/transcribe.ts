@@ -59,7 +59,7 @@ app.post('/transcribe', async (c) => {
       return c.json({ error: 'No audio file provided' }, 400)
     }
 
-    // Optional keyterms – a comma-separated or JSON string of important words (e.g., attendee names)
+    // Optional keyterms
     const keytermsRaw = formData.get('keyterms')
     let keyterms: string[] | undefined
     if (keytermsRaw && typeof keytermsRaw === 'string') {
@@ -71,20 +71,19 @@ app.post('/transcribe', async (c) => {
       }
     }
 
-    // 4. Submit to AssemblyAI (Blob + force English)
+    // 4. Submit to AssemblyAI (force English, no quality gate)
     const blob = new Blob([await audioFile.arrayBuffer()], { type: audioFile.type || 'audio/webm' })
     const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
     const transcript = await client.transcripts.submit({
       audio: blob,
       speaker_labels: true,
       speech_models: ['universal'],
-      language_code: 'en',          // ✅ FORCE ENGLISH – prevents Russian/French misdetection
+      language_code: 'en',
       punctuate: true,
       format_text: true,
       ...(keyterms && keyterms.length ? { keyterms } : {}),
     })
 
-    // 5. Return job_id immediately
     return c.json({ job_id: transcript.id })
   } catch (error: any) {
     try { await releaseJobSlot(c.env) } catch {}
@@ -117,16 +116,6 @@ app.get('/status/:jobId', async (c) => {
       end_ms: u.end,
       duration_ms: u.end - u.start,
     })) || []
-
-    // ── Quality gate: reject garbled or nearly empty transcripts ──
-    const totalText = utterances.map((u: any) => u.text).join(' ').trim()
-    if (utterances.length === 0 || totalText.length < 50) {
-      await releaseJobSlot(c.env)
-      return c.json({
-        status: 'error',
-        message: 'Transcript produced insufficient content. Please check your audio quality or try uploading a file instead.',
-      })
-    }
 
     const speakers = [...new Set(utterances.map((u: any) => u.speaker))]
     const talkTime: Record<string, any> = {}

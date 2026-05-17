@@ -3,38 +3,45 @@ import Groq from 'groq-sdk'
 
 const app = new Hono()
 
-// ── System prompt – multilingual, length‑adaptive, anti‑hallucination ──
-const SYSTEM_PROMPT = `You are an expert meeting analyst and translator.
-Your task is to read the transcript of a meeting or conversation and produce a JSON object with exactly the following keys.
+// ── Optimized system prompt – proportional, always‑on, no refusal ──
+const SYSTEM_PROMPT = `You are an expert meeting analyst. You will receive a transcript of a conversation (in English) and must produce a JSON object with the exact keys listed below.
 
 CORE RULES:
-1. **Detect the language** of the transcript. Respond in THAT SAME LANGUAGE for all text fields (summary, decisions, quotes, etc.).
-2. **Never invent information.** Every decision, action item, quote, and risk must be traceable to something actually said. If the transcript is garbled, unintelligible, or in a language you cannot understand, set "summary" to "Transcript could not be analyzed" and leave all arrays empty.
-3. **Summary length must match the transcript length.** For a short meeting (under 500 words), a 5‑8 sentence summary is enough. For a long meeting (over 1500 words), write a comprehensive summary of 15‑25 sentences covering all major themes, decisions, and context. Use your judgment.
-4. **Be precise and detailed.** Include names, specific decisions, numbers, and quotes where possible.
+1. **Write a summary whose length is proportional to the transcript.**  
+   - Very short (a few lines) → 1‑3 sentence summary.  
+   - Short (under 500 words) → 4‑6 sentence summary.  
+   - Medium (500‑1500 words) → 8‑15 sentence summary.  
+   - Long (over 1500 words) → 15‑25 sentence summary covering all major themes, decisions, and context.  
+   Let the transcript length guide you.
 
-KEY DEFINITIONS:
-- "summary": A thorough, proportional summary (see rule 3).
-- "decisions": Array of strings, each a clear decision and who made it.
-- "action_items": Array of objects with "task", "owner", "deadline" (or "none"), "priority" (High/Medium/Low). If none, [].
-- "open_questions": Array of strings.
-- "parking_lot": Array of strings (deferred topics).
-- "key_topics": Array of strings.
-- "key_quotes": Array of objects with "quote" and "speaker".
-- "sentiment": "Positive", "Neutral", "Mixed", or "Tense".
-- "sentiment_reason": One sentence explaining sentiment.
-- "effectiveness_score": Integer 0‑10.
-- "effectiveness_reason": One sentence justifying score.
-- "next_agenda": Array of strings (suggested next‑meeting topics).
-- "risk_flags": Array of strings (potential blockers/risks mentioned).
-- "meeting_type": "standup", "planning", "review", "decision", "brainstorm", or "other".
+2. **Base everything strictly on the transcript.** Do not invent decisions, action items, quotes, or any data. If a field has no supporting content, return an empty array [] or appropriate empty value.
+
+3. **Always produce a valid JSON output.** Even if the transcript is minimal, garbled, or contains only a few words, write the best possible summary with what you can understand. If you truly cannot extract any meaning, set "summary" to "The transcript was too brief or unclear to analyze." but still fill the other keys with empty arrays/neutral values.
+
+4. **Be precise and specific.** Include names, numbers, deadlines, and direct quotes whenever they appear in the transcript.
+
+KEYS (with types and examples):
+- "summary": string (proportional, see Rule 1)
+- "decisions": string[] – e.g. ["Launch on Friday (Alice)"]
+- "action_items": { "task": string, "owner": string, "deadline": string, "priority": "High"|"Medium"|"Low" }[] – tasks assigned during the meeting
+- "open_questions": string[] – unanswered questions
+- "parking_lot": string[] – topics deferred for later
+- "key_topics": string[] – main subjects discussed
+- "key_quotes": { "quote": string, "speaker": string }[] – notable statements
+- "sentiment": "Positive"|"Neutral"|"Mixed"|"Tense"
+- "sentiment_reason": string – one sentence explaining sentiment
+- "effectiveness_score": integer 0‑10 – 0 = unproductive, 10 = extremely productive
+- "effectiveness_reason": string – one sentence justifying score
+- "next_agenda": string[] – suggested items for next meeting
+- "risk_flags": string[] – potential blockers or risks mentioned
+- "meeting_type": "standup"|"planning"|"review"|"decision"|"brainstorm"|"other"
 
 Return ONLY the JSON object, no other text.`
 
-// ── Transcript length threshold for two‑pass extraction ──
+// ── Transcript length threshold for two‑pass extraction (optimization, not a gate) ──
 const LONG_TRANSCRIPT_THRESHOLD = 6000 // characters (~1500 words)
 
-// ── Summarisation helper (first pass for long transcripts) ──
+// ── Summarisation helper for long transcripts ──
 async function summarizeTranscript(groq: Groq, transcript: string): Promise<string> {
   const prompt = `The following is a long meeting transcript. Create a detailed, structured summary in bullet points that captures all key topics, decisions, action items, risks, and notable quotes. Keep the summary under 1000 words.\n\nTRANSCRIPT:\n${transcript}`
   const resp = await groq.chat.completions.create({
@@ -45,21 +52,18 @@ async function summarizeTranscript(groq: Groq, transcript: string): Promise<stri
   return resp.choices[0].message.content?.trim() || transcript
 }
 
-// ── Validation ──
-function isValidExtraction(parsed: any): boolean {
-  if (!parsed || typeof parsed.summary !== 'string' || parsed.summary.trim() === '' || parsed.summary === 'Transcript could not be analyzed.') return false
-  if (typeof parsed.effectiveness_score !== 'number' || parsed.effectiveness_score < 0 || parsed.effectiveness_score > 10) return false
-  const allowedSentiments = ['Positive', 'Neutral', 'Mixed', 'Tense']
-  if (!allowedSentiments.includes(parsed.sentiment)) return false
-  return true
+// ── Light validation – only retry if the output is clearly broken (missing summary) ──
+function isOutputCrippled(result: any): boolean {
+  // If summary is empty or the default placeholder, consider it crippled
+  return !result || typeof result.summary !== 'string' || result.summary.trim() === '' || result.summary === 'No summary available.'
 }
 
-// ── Main extraction (with optional retry) ──
-async function extract(
+// ── Core extraction (with optional retry for crippled output) ──
+async function extractWithRetry(
   groq: Groq,
   transcript: string,
   meetingContext: any,
-  retry = false
+  retryCount = 0
 ): Promise<Record<string, any>> {
   const title = meetingContext?.title || 'Untitled Meeting'
   const date = meetingContext?.date || 'Date not specified'
@@ -68,10 +72,12 @@ async function extract(
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'user', content: `Meeting Title: ${title}\nMeeting Date: ${date}\n\nTRANSCRIPT:\n${transcript}` },
   ]
-  if (retry) {
+
+  // On retry, inject a stronger reminder
+  if (retryCount > 0) {
     messages.splice(1, 0, {
       role: 'system',
-      content: 'CRITICAL: Your previous response was incomplete or invalid. Re‑read the transcript and produce a fully populated JSON object with every key properly filled.',
+      content: 'CRITICAL: Your previous output was incomplete. Please re‑read the transcript carefully and produce a fully populated JSON object. Ensure the summary is a meaningful paragraph, not a placeholder.',
     })
   }
 
@@ -83,10 +89,11 @@ async function extract(
   })
 
   const raw = response.choices[0].message.content
-  console.log('Groq raw response:', raw?.substring(0, 500))
+  console.log(`Groq raw response (attempt ${retryCount + 1}):`, raw?.substring(0, 500))
 
   const result = JSON.parse(raw)
 
+  // Fill missing keys with defaults
   const defaults: Record<string, any> = {
     summary: 'No summary available.',
     decisions: [],
@@ -108,6 +115,7 @@ async function extract(
       result[key] = defaultVal
     }
   }
+
   return result
 }
 
@@ -122,11 +130,12 @@ app.post('/analyze', async (c) => {
   const namedTranscript = namedLines.join('\n')
   if (!namedTranscript.trim()) return c.json({ error: 'Transcript is empty. Cannot analyze.' })
 
+  // Debug logs (harmless)
   console.log('Transcript length:', namedTranscript.length)
   console.log('Transcript preview:', namedTranscript.substring(0, 300))
 
   try {
-    // Two‑pass for very long transcripts
+    // Optional two‑pass for very long transcripts (improves extraction quality)
     let finalTranscript = namedTranscript
     if (namedTranscript.length > LONG_TRANSCRIPT_THRESHOLD) {
       console.log('Transcript exceeds threshold; summarizing first.')
@@ -135,21 +144,27 @@ app.post('/analyze', async (c) => {
         console.log('Summarisation complete, length:', finalTranscript.length)
       } catch (err) {
         console.error('Summarisation failed, using full transcript.', err)
+        finalTranscript = namedTranscript   // fallback to original
       }
     }
 
     // First extraction attempt
-    let result = await extract(groq, finalTranscript, meeting_context)
+    let result = await extractWithRetry(groq, finalTranscript, meeting_context)
 
-    // Retry if invalid
-    if (!isValidExtraction(result)) {
-      console.log('First extraction invalid, retrying...')
-      result = await extract(groq, finalTranscript, meeting_context, true)
+    // If the output is crippled (e.g., summary still placeholder), retry once
+    if (isOutputCrippled(result)) {
+      console.log('First extraction crippled, retrying...')
+      try {
+        result = await extractWithRetry(groq, finalTranscript, meeting_context, 1)
+      } catch (retryErr) {
+        console.error('Retry failed:', retryErr)
+        // keep the crippled result rather than throwing
+      }
     }
 
     return c.json(result)
   } catch (error: any) {
-    console.error('Analysis error:', error)
+    console.error('Analysis pipeline error:', error)
     return c.json({ error: 'Analysis failed', message: error?.message || String(error) }, 500)
   }
 })
