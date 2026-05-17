@@ -3,6 +3,7 @@ import Groq from 'groq-sdk'
 
 const app = new Hono()
 
+// Original working prompt – no disclaimer forcing
 const SYSTEM_PROMPT = `You are an expert meeting analyst and executive assistant.
 Analyse the meeting transcript below and extract comprehensive information.
 Return ONLY a valid JSON object with exactly these keys.
@@ -10,7 +11,7 @@ Do not add any text before or after the JSON.
 Do not invent information not present in the transcript.
 
 {
-  "summary": "A thorough, paragraph-length summary covering the meeting purpose, key outcomes, and next steps. Length should be proportional to the transcript.",
+  "summary": "A thorough, paragraph-length summary covering the meeting purpose, key outcomes, and next steps. Length proportional to transcript.",
   "decisions": ["clearly stated decision one", "clearly stated decision two"],
   "action_items": [
     {
@@ -39,31 +40,33 @@ Do not invent information not present in the transcript.
   "meeting_type": "one of: Planning / Standup / Retrospective / Decision / Brainstorm / Client / 1-on-1 / All-hands / Other"
 }`
 
-const MAX_TRANSCRIPT_LENGTH = 100000
-
+// ── Robust JSON parsing (prevents crashes) ──────────────────────────
 function parseGroqJSON(raw: string | null): Record<string, any> {
   if (!raw) return {}
   try { return JSON.parse(raw) } catch {}
   const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/)
-  if (codeBlockMatch) { try { return JSON.parse(codeBlockMatch[1]) } catch {} }
+  if (codeBlockMatch) {
+    try { return JSON.parse(codeBlockMatch[1]) } catch {}
+  }
   const jsonMatch = raw.match(/\{[\s\S]*\}/)
-  if (jsonMatch) { try { return JSON.parse(jsonMatch[0]) } catch {} }
+  if (jsonMatch) {
+    try { return JSON.parse(jsonMatch[0]) } catch {}
+  }
   return {}
 }
 
-function isOutputCrippled(result: Record<string, any>, transcriptLength: number): boolean {
-  if (!result || typeof result.summary !== 'string' || result.summary.trim() === '') return true
-  // If the transcript is substantial but the summary is still the placeholder, retry
-  if (transcriptLength > 500 && result.summary === 'No summary available.') return true
-  return false
+// ── Only retry if summary is completely empty ───────────────────────
+function isOutputCrippled(result: any): boolean {
+  return !result || typeof result.summary !== 'string' || result.summary.trim() === '' || result.summary === 'No summary available.'
 }
 
+// ── Core extraction with optional retry ─────────────────────────────
 async function extractWithRetry(
   groq: Groq,
   transcript: string,
   meetingContext: any,
   retryCount = 0
-): Promise<{ result: Record<string, any>; retries: number }> {
+): Promise<Record<string, any>> {
   const title = meetingContext?.title || 'Untitled Meeting'
   const date = meetingContext?.date || 'Date not specified'
 
@@ -75,23 +78,23 @@ async function extractWithRetry(
   if (retryCount > 0) {
     messages.splice(1, 0, {
       role: 'system',
-      content: 'CRITICAL: Your previous output was incomplete. Please read the transcript again and produce a fully populated JSON. Do not return a generic placeholder summary.',
+      content: 'Your previous output was incomplete. Please read the transcript again and produce a fully populated JSON object.',
     })
   }
 
-  const estimatedTokens = Math.min(8000, Math.max(2000, Math.ceil(transcript.length / 2)))
   const response = await groq.chat.completions.create({
     model: 'llama-3.3-70b-versatile',
     messages,
     response_format: { type: 'json_object' },
-    max_tokens: estimatedTokens,
+    max_tokens: 4000,  // original value
   })
 
-  const raw = response.choices[0]?.message?.content || ''
+  const raw = response.choices[0].message.content
   console.log(`Groq raw response (attempt ${retryCount + 1}):`, raw?.substring(0, 500))
 
-  const parsed = parseGroqJSON(raw)
+  const result = parseGroqJSON(raw)
 
+  // Fill missing keys with defaults
   const defaults: Record<string, any> = {
     summary: 'No summary available.',
     decisions: [],
@@ -102,33 +105,34 @@ async function extractWithRetry(
     key_quotes: [],
     sentiment: 'Neutral',
     sentiment_reason: '',
-    effectiveness_score: null,
+    effectiveness_score: 0,
     effectiveness_reason: '',
     next_agenda: [],
     risk_flags: [],
-    meeting_type: null,
+    meeting_type: 'Other',
   }
-
   for (const [key, defaultVal] of Object.entries(defaults)) {
-    if (!(key in parsed) || parsed[key] === null || parsed[key] === undefined) {
-      parsed[key] = defaultVal
+    if (!(key in result) || result[key] === null || result[key] === undefined) {
+      result[key] = defaultVal
     }
   }
 
-  if (parsed.effectiveness_score !== null && typeof parsed.effectiveness_score !== 'number') {
-    parsed.effectiveness_score = null
-  }
-
-  return { result: parsed, retries: retryCount }
+  return result
 }
 
+// ── Route handler ──────────────────────────────────────────────────
 app.post('/analyze', async (c) => {
   const groq = new Groq({ apiKey: c.env.GROQ_API_KEY_1 })
 
   let body: any
-  try { body = await c.req.json() } catch { return c.json({ error: 'Invalid JSON body' }, 400) }
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
 
   const { utterances, speaker_map = {}, meeting_context = {} } = body
+
   if (!utterances || !Array.isArray(utterances) || utterances.length === 0) {
     return c.json({ error: 'Transcript is empty. Cannot analyze.' }, 400)
   }
@@ -138,38 +142,43 @@ app.post('/analyze', async (c) => {
     return `${name}: ${utt.text}`
   })
 
-  const transcript = namedLines.join('\n').trim()
-  if (!transcript) return c.json({ error: 'Transcript is empty. Cannot analyze.' }, 400)
-
-  console.log('Transcript length:', transcript.length)
-  console.log('Transcript preview:', transcript.substring(0, 300))
-
-  if (transcript.length > MAX_TRANSCRIPT_LENGTH) {
-    return c.json({ error: 'Transcript too long for a single analysis.' }, 413)
+  const namedTranscript = namedLines.join('\n').trim()
+  if (!namedTranscript) {
+    return c.json({ error: 'Transcript is empty. Cannot analyze.' }, 400)
   }
 
-  try {
-    let { result, retries } = await extractWithRetry(groq, transcript, meeting_context)
+  console.log('Transcript length:', namedTranscript.length)
+  console.log('Transcript preview:', namedTranscript.substring(0, 300))
 
-    if (isOutputCrippled(result, transcript.length)) {
+  try {
+    let result = await extractWithRetry(groq, namedTranscript, meeting_context)
+
+    if (isOutputCrippled(result)) {
       console.log('First extraction crippled, retrying...')
-      const retry = await extractWithRetry(groq, transcript, meeting_context, 1)
-      result = retry.result
-      retries = retry.retries
+      try {
+        result = await extractWithRetry(groq, namedTranscript, meeting_context, 1)
+      } catch (retryErr) {
+        console.error('Retry failed:', retryErr)
+      }
     }
 
-    return c.json({ ...result, analysis_meta: { retries_attempted: retries } })
+    return c.json(result)
   } catch (error: any) {
     console.error('Analysis pipeline error:', error)
     return c.json({ error: 'Analysis failed', message: error?.message || String(error) }, 500)
   }
 })
 
+// ── Draft email (original logic kept) ───────────────────────────────
 app.post('/draft-email', async (c) => {
   const groq = new Groq({ apiKey: c.env.GROQ_API_KEY_1 })
 
   let data: any
-  try { data = await c.req.json() } catch { return c.json({ error: 'Invalid JSON body' }, 400) }
+  try {
+    data = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
 
   if (!data.summary || data.summary === 'No summary available.') {
     return c.json({ error: 'No meeting data to draft email from.' }, 400)
@@ -180,7 +189,6 @@ app.post('/draft-email', async (c) => {
     client: 'Write for client: warm, relationship-first, commitments not tasks, under 300 words.',
     team: 'Write for team: casual, direct, action-focused, under 250 words.',
   }
-
   const instructions = toneInstructions[data.tone] || toneInstructions.team
   const prompt = `Write a follow-up email.\nTONE: ${instructions}\nSummary: ${data.summary}\nDecisions: ${data.decisions?.join(', ') || 'None'}\nAction Items: ${JSON.stringify(data.action_items)}\nTopics: ${data.key_topics?.join(', ') || 'None'}\n\nReturn only the email text. Include Subject line.`
 
@@ -191,7 +199,7 @@ app.post('/draft-email', async (c) => {
       max_tokens: 1000,
     })
 
-    const emailText = response.choices[0]?.message?.content?.trim()
+    const emailText = response.choices[0].message.content?.trim()
     if (!emailText) return c.json({ error: 'Email draft was empty.' }, 500)
     return c.json({ email: emailText })
   } catch (error: any) {

@@ -16,7 +16,7 @@ app.post('/transcribe', async (c) => {
   try {
     const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
 
-    // 1. Monthly usage limit
+    // 1. Check user's monthly limit
     const now = new Date()
     const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
     const { data: profile } = await supabase
@@ -44,7 +44,7 @@ app.post('/transcribe', async (c) => {
       }
     }
 
-    // 2. Concurrency
+    // 2. Concurrency check
     slotAcquired = await acquireJobSlot(c.env)
     if (!slotAcquired) {
       return c.json({
@@ -53,7 +53,7 @@ app.post('/transcribe', async (c) => {
       }, 429)
     }
 
-    // 3. Parse audio file + keyterms
+    // 3. Parse audio file and optional keyterms
     const formData = await c.req.formData()
     const audioFile = formData.get('audio') as File
     if (!audioFile) {
@@ -61,27 +61,22 @@ app.post('/transcribe', async (c) => {
       return c.json({ error: 'No audio file provided' }, 400)
     }
 
-    // ==== CRITICAL FIX: ensure filename has extension (like v1) ====
+    // ===== FIX: ensure filename has extension (like v1 Python) =====
     let filename = audioFile.name
     const contentType = audioFile.type || ''
-    console.log(`🔍 Original filename: "${filename}", type: "${contentType}"`)
+    console.log(`Original filename: "${filename}", type: "${contentType}"`)
 
     if (!filename || !filename.includes('.')) {
-      if (contentType.includes('webm')) {
-        filename = 'recording.webm'
-      } else if (contentType.includes('mp4') || contentType.includes('m4a')) {
-        filename = 'recording.m4a'
-      } else if (contentType.includes('mp3') || contentType.includes('mpeg')) {
-        filename = 'recording.mp3'
-      } else {
-        filename = 'recording.webm' // safe default
-      }
-      console.log(`🔧 Fixed filename to: "${filename}"`)
+      if (contentType.includes('webm')) filename = 'recording.webm'
+      else if (contentType.includes('mp4') || contentType.includes('m4a')) filename = 'recording.m4a'
+      else if (contentType.includes('mp3') || contentType.includes('mpeg')) filename = 'recording.mp3'
+      else filename = 'recording.webm' // safe default
+      console.log(`Fixed filename to: "${filename}"`)
     }
 
-    // Re-create File with corrected name (preserve buffer)
+    // Re-create File with corrected name
     const fixedFile = new File([await audioFile.arrayBuffer()], filename, { type: contentType })
-    // ==================================================================
+    // ================================================================
 
     // Optional keyterms
     const keytermsRaw = formData.get('keyterms')
@@ -95,16 +90,15 @@ app.post('/transcribe', async (c) => {
       }
     }
 
-    // 4. Submit to AssemblyAI with best model
+    // 4. Submit to AssemblyAI – using original working config
     const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
     const transcript = await client.transcripts.submit({
       audio: fixedFile,
       speaker_labels: true,
-      speech_model: 'best',
-      language_detection: true,
+      speech_models: ['universal'],   // <- original, working
+      language_code: 'en',
       punctuate: true,
       format_text: true,
-      disfluencies: false,
       ...(keyterms && keyterms.length ? { keyterms } : {}),
     })
 
@@ -138,10 +132,9 @@ app.get('/status/:jobId', async (c) => {
         start_ms: u.start || 0,
         end_ms: u.end || 0,
         duration_ms: Math.max(0, (u.end || 0) - (u.start || 0)),
-        confidence: typeof u.confidence === 'number' ? Math.round(u.confidence * 100) / 100 : null,
       }))
 
-    const speakers = [...new Set(utterances.map((u) => u.speaker))]
+    const speakers = [...new Set(utterances.map((u: any) => u.speaker))]
     const talkTime: Record<string, any> = {}
     let totalMs = 0
     for (const u of utterances) {
@@ -175,9 +168,6 @@ app.get('/status/:jobId', async (c) => {
       speakers,
       confidence,
       talk_time: talkTime,
-      full_text: transcript.text || '',
-      audio_duration_seconds: transcript.audio_duration || 0,
-      language: transcript.language_code || 'en',
     })
   } catch (error: any) {
     console.error('Status check failed:', error)
