@@ -16,7 +16,7 @@ app.post('/transcribe', async (c) => {
   try {
     const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
 
-    // 1. Check user's monthly limit
+    // 1. Monthly usage limit
     const now = new Date()
     const periodStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
     const { data: profile } = await supabase
@@ -44,7 +44,7 @@ app.post('/transcribe', async (c) => {
       }
     }
 
-    // 2. Concurrency check
+    // 2. Concurrency slot
     slotAcquired = await acquireJobSlot(c.env)
     if (!slotAcquired) {
       return c.json({
@@ -61,22 +61,18 @@ app.post('/transcribe', async (c) => {
       return c.json({ error: 'No audio file provided' }, 400)
     }
 
-    // ===== FIX: ensure filename has extension (like v1 Python) =====
-    let filename = audioFile.name
+    // Fix missing extension
+    let filename = audioFile.name || 'recording.webm'
     const contentType = audioFile.type || ''
-    console.log(`Original filename: "${filename}", type: "${contentType}"`)
-
-    if (!filename || !filename.includes('.')) {
+    if (!filename.includes('.')) {
       if (contentType.includes('webm')) filename = 'recording.webm'
       else if (contentType.includes('mp4') || contentType.includes('m4a')) filename = 'recording.m4a'
       else if (contentType.includes('mp3') || contentType.includes('mpeg')) filename = 'recording.mp3'
-      else filename = 'recording.webm' // safe default
-      console.log(`Fixed filename to: "${filename}"`)
+      else filename = 'recording.webm'
     }
 
-    // Re-create File with corrected name
-    const fixedFile = new File([await audioFile.arrayBuffer()], filename, { type: contentType })
-    // ================================================================
+    const audioBuffer = await audioFile.arrayBuffer()
+    const fixedFile = new File([audioBuffer], filename, { type: contentType })
 
     // Optional keyterms
     const keytermsRaw = formData.get('keyterms')
@@ -90,19 +86,37 @@ app.post('/transcribe', async (c) => {
       }
     }
 
-    // 4. Submit to AssemblyAI – using original working config
+    // ===== Phase 9: Store raw audio in R2 =====
+    let audioR2Key = ''
+    if (c.env.MEETING_AUDIO) {
+      const ext = filename.split('.').pop() || 'webm'
+      audioR2Key = `audio/${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`
+      try {
+        await c.env.MEETING_AUDIO.put(audioR2Key, audioBuffer, {
+          httpMetadata: { contentType: fixedFile.type },
+        })
+      } catch (err) {
+        console.error('R2 upload failed (non-fatal):', err)
+        audioR2Key = ''
+      }
+    }
+
+    // 4. Submit to AssemblyAI
     const client = new AssemblyAI({ apiKey: c.env.ASSEMBLYAI_API_KEY })
     const transcript = await client.transcripts.submit({
       audio: fixedFile,
       speaker_labels: true,
-      speech_models: ['universal'],   // <- original, working
+      speech_models: ['universal'],
       language_code: 'en',
       punctuate: true,
       format_text: true,
       ...(keyterms && keyterms.length ? { keyterms } : {}),
     })
 
-    return c.json({ job_id: transcript.id })
+    return c.json({
+      job_id: transcript.id,
+      audio_r2_key: audioR2Key || null,
+    })
   } catch (error: any) {
     if (slotAcquired) await releaseJobSlot(c.env)
     console.error('Transcription submission failed:', error)
@@ -123,6 +137,7 @@ app.get('/status/:jobId', async (c) => {
 
     if (transcript.status !== 'completed') return c.json({ status: 'processing' })
 
+    // Build utterances
     const rawUtterances = transcript.utterances || []
     const utterances = rawUtterances
       .filter((u: any) => u.text && u.text.trim().length > 0)
@@ -149,9 +164,39 @@ app.get('/status/:jobId', async (c) => {
 
     const confidence = transcript.confidence ? Math.round(transcript.confidence * 1000) / 10 : null
 
+    // ===== Phase 9: Save full transcript to meeting_transcripts =====
+    const user = c.get('user')
+    const supabase = createClient(c.env.SUPABASE_URL, c.env.SUPABASE_SERVICE_ROLE_KEY)
+    const audioR2Key = c.req.query('audio_r2_key') || ''
+    let transcriptId: string | null = null
+
+    if (user) {
+      try {
+        const { data: row } = await supabase
+          .from('meeting_transcripts')
+          .insert({
+            meeting_id: null, // linked later when meeting is saved
+            full_transcript: transcript.text || '',
+            utterances_json: utterances,
+            audio_r2_key: audioR2Key,
+            audio_duration_seconds: transcript.audio_duration || 0,
+            language: transcript.language_code || 'en',
+            speaker_count: speakers.length,
+            confidence_score: confidence,
+            talk_time: talkTime,
+            retained: true,
+          })
+          .select('id')
+          .single()
+        transcriptId = row?.id || null
+      } catch (err) {
+        console.error('Failed to save transcript:', err)
+      }
+    }
+
     await releaseJobSlot(c.env)
 
-    const user = c.get('user')
+    // Usage tracking + Slack
     if (user) {
       const durationSeconds = Math.round(totalMs / 1000)
       await trackUsage(c.env, user.id, durationSeconds)
@@ -162,12 +207,29 @@ app.get('/status/:jobId', async (c) => {
       }
     }
 
+    // ===== Phase 9: Signed download URL for audio =====
+    let audioDownloadUrl: string | null = null
+    if (audioR2Key && c.env.MEETING_AUDIO) {
+      try {
+        audioDownloadUrl = await c.env.MEETING_AUDIO.createSignedUrl({
+          key: audioR2Key,
+          method: 'GET',
+          expirationTtl: 86400, // 24 hours
+        })
+      } catch (err) {
+        console.error('Failed to create signed URL:', err)
+      }
+    }
+
     return c.json({
       status: 'complete',
       utterances,
       speakers,
       confidence,
       talk_time: talkTime,
+      full_text: transcript.text || '',
+      audio_download_url: audioDownloadUrl,
+      transcript_id: transcriptId,
     })
   } catch (error: any) {
     console.error('Status check failed:', error)

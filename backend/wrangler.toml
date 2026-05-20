@@ -7,6 +7,12 @@ compatibility_flags = ["nodejs_compat"]
 binding = "MEETING_JOBS"
 id = "5045e3a5c29144f195402d583662790c"
 
+# ===== Phase 9: Audio storage =====
+[[r2_buckets]]
+binding = "MEETING_AUDIO"
+bucket_name = "meeting-audio"
+# ==================================
+
 [[env.staging]]
 name = "meetingmind-api-staging"
 vars = { ENVIRONMENT = "staging" }
@@ -17,6 +23,10 @@ vars = { ENVIRONMENT = "production" }
 kv_namespaces = [
   { binding = "MEETING_JOBS", id = "5045e3a5c29144f195402d583662790c" }
 ]
-
+# ===== Phase 9: Audio storage (production) =====
+r2_buckets = [
+  { binding = "MEETING_AUDIO", bucket_name = "meeting-audio" }
+]
+# ================================================
 [env.production.triggers]
 crons = ["*/15 * * * *"]

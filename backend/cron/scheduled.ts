@@ -1,6 +1,57 @@
 import { createClient } from '@supabase/supabase-js'
 import { pollCalendarEvents } from '../services/calendar'
 
+// ── Phase 9: Nightly orphaned transcript cleanup (7‑day grace) ────
+async function cleanupOrphanedTranscripts(env: any) {
+  const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
+
+  try {
+    const cutoff = new Date(Date.now() - 7 * 86400000).toISOString()
+
+    const { data: orphaned, error } = await supabase
+      .from('meeting_transcripts')
+      .select('id, audio_r2_key')
+      .eq('retained', false)
+      .lt('created_at', cutoff)
+
+    if (error) {
+      console.error('Orphan transcript query failed:', error)
+      return
+    }
+
+    if (!orphaned?.length) return
+
+    let deletedAudio = 0
+    let deletedRows = 0
+
+    for (const row of orphaned) {
+      if (row.audio_r2_key && env.MEETING_AUDIO) {
+        try {
+          await env.MEETING_AUDIO.delete(row.audio_r2_key)
+          deletedAudio++
+        } catch (err) {
+          console.error(`Failed to delete R2 audio ${row.audio_r2_key}:`, err)
+        }
+      }
+
+      const { error: delError } = await supabase
+        .from('meeting_transcripts')
+        .delete()
+        .eq('id', row.id)
+
+      if (!delError) {
+        deletedRows++
+      } else {
+        console.error(`Failed to delete transcript row ${row.id}:`, delError)
+      }
+    }
+
+    console.log(`Orphan cleanup: ${deletedAudio} audio files, ${deletedRows} transcript rows deleted`)
+  } catch (error) {
+    console.error('Orphan transcript cleanup failed:', error)
+  }
+}
+
 export default {
   async scheduled(event: ScheduledEvent, env: any, ctx: ExecutionContext) {
     // ── Calendar auto‑ingestion (every 15 minutes) ──
@@ -136,7 +187,7 @@ export default {
         }
       }
 
-      // 3. Alert preferences check (NEW)
+      // 3. Alert preferences check (existing)
       const { runAlertService } = await import('../services/alert-service')
       try {
         await runAlertService(env)
@@ -144,9 +195,12 @@ export default {
         console.error('Alert service error:', err)
       }
 
+      // ── Phase 9: Orphaned transcript cleanup ──
+      await cleanupOrphanedTranscripts(env)
+
       // Mark as processed
       await env.MEETING_JOBS.put(lastRunKey, today)
-      console.log('Intelligence engine run complete (patterns + initiative health + alerts).')
+      console.log('Intelligence engine run complete (patterns + initiative health + alerts + orphan cleanup).')
     }
   },
 }
